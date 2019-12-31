@@ -1,0 +1,5 @@
+error: Tuple structs are not supported.
+ --> $DIR/test_tuple_struct.rs:4:1
+  |
+4 | struct TupleStruct<'a, T>(u64, usize, &'a T);
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

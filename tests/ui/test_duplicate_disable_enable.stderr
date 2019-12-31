@@ -1,0 +1,11 @@
+error: Duplicate field `option_as_ref`
+ --> $DIR/test_duplicate_disable_enable.rs:5:21
+  |
+5 | #[shorthand(disable(option_as_ref, const_fn))]
+  |                     ^^^^^^^^^^^^^
+
+error: Duplicate field `const_fn`
+ --> $DIR/test_duplicate_disable_enable.rs:5:36
+  |
+5 | #[shorthand(disable(option_as_ref, const_fn))]
+  |                                    ^^^^^^^^

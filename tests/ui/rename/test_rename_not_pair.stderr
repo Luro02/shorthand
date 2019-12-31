@@ -1,0 +1,11 @@
+error: Unexpected meta-item format `Path`
+ --> $DIR/test_rename_not_pair.rs:5:24
+  |
+5 |     #[shorthand(rename(format))]
+  |                        ^^^^^^
+
+error: Unexpected meta-item format `List`
+ --> $DIR/test_rename_not_pair.rs:6:24
+  |
+6 |     #[shorthand(rename(format(xyz)))]
+  |                        ^^^^^^^^^^^

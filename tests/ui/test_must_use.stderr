@@ -1,0 +1,11 @@
+error: unused return value of `Example::value` that must be used
+  --> $DIR/test_must_use.rs:12:5
+   |
+12 |     Example::default().value();
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+note: lint level defined here
+  --> $DIR/test_must_use.rs:1:9
+   |
+1  | #![deny(unused_must_use)]
+   |         ^^^^^^^^^^^^^^^
