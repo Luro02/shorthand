@@ -1,5 +1,9 @@
 shorthand
 ===
+[![Crates.io: hex](https://img.shields.io/crates/v/shorthand.svg)](https://crates.io/crates/shorthand)
+[![Documentation](https://docs.rs/shorthand/badge.svg)](https://docs.rs/shorthand)
+[![Build Status](https://travis-ci.org/Luro02/shorthand.svg?branch=master)](https://travis-ci.org/Luro02/shorthand)
+
 [`shorthand`](https://dictionary.cambridge.org/de/worterbuch/englisch/shorthand) is defined as
 `a system of fast writing`
 and that is exactly what this library is for; to remove the annoying
