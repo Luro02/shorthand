@@ -15,9 +15,10 @@ fn tests() {
     // attribute errors:
     t.compile_fail("tests/ui/test_not_copy.rs");
     t.compile_fail("tests/ui/test_unknown_visibility.rs");
-    t.compile_fail("tests/ui/test_duplicate_disable_enable.rs");
+    t.compile_fail("tests/ui/test_redundant_disable_enable.rs");
     t.compile_fail("tests/ui/test_unknown_field.rs");
     t.compile_fail("tests/ui/test_unexpected_lit.rs");
+    t.compile_fail("tests/ui/test_duplicate_enable_enable.rs");
 
     // rename
     t.compile_fail("tests/ui/rename/test_rename_path.rs");

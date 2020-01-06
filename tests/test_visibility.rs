@@ -1,10 +1,12 @@
 use shorthand::ShortHand;
 
 #[derive(ShortHand)]
-#[shorthand(visibility(pub(in crate)))]
 pub struct Command {
+    #[shorthand(visibility("pub(crate)"))]
     executable: String,
+    #[shorthand(visibility("pub(self)"))]
     args: Vec<String>,
+    #[shorthand(visibility("pub(in crate)"))]
     env: Vec<String>,
     index: usize,
     optional: Option<String>,

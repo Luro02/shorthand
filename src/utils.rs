@@ -27,10 +27,32 @@ impl AttributeExt for Attribute {
     }
 }
 
-impl MetaExt for Meta {
-    fn to_string(&self) -> String {
-        self.path().to_string()
+pub(crate) trait ErrorExt {
+    fn multiple<T>(errors: T) -> syn::Error
+    where
+        T: IntoIterator<Item = syn::Error>;
+}
+
+impl ErrorExt for syn::Error {
+    fn multiple<T>(errors: T) -> syn::Error
+    where
+        T: IntoIterator<Item = syn::Error>,
+    {
+        let mut errors = errors.into_iter();
+        let mut result = errors
+            .next()
+            .expect("Failed to create an Error from an empty Iterator");
+
+        for error in errors {
+            result.combine(error);
+        }
+
+        result
     }
+}
+
+impl MetaExt for Meta {
+    fn to_string(&self) -> String { self.path().to_string() }
 }
 
 impl PathExt for Path {

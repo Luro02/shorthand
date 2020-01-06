@@ -2,15 +2,25 @@ use std::collections::HashMap;
 
 use darling::Error;
 use from_map::FromMap;
+use proc_macro2::Span;
+use syn::spanned::Spanned;
 use syn::{Meta, NestedMeta};
 
 use crate::utils::MetaExt;
 
 #[derive(Default)]
 pub(crate) struct AttributesBuilder {
-    fields: HashMap<&'static str, bool>,
+    fields: HashMap<&'static str, (bool, Span)>,
     errors: Vec<Error>,
 }
+
+/*
+What should trigger an error (redundant attributes):
+- enabling an attribute, that is already enabled
+- disabling an attribute, that is already disabled
+- enabling/disabling an attribute multiple times
+  #[shorthand(enable(const_fn, const_fn))]
+*/
 
 impl AttributesBuilder {
     const FIELDS: [&'static str; 18] = [
@@ -65,6 +75,11 @@ impl AttributesBuilder {
                                 insert_field = Some("rename");
                             }
                             unknown = false;
+                        // forward will be parse from `Options` directly,
+                        // therefore this field should
+                        // be ignored.
+                        } else if name == "forward" {
+                            return self;
                         } else {
                             for field in &Self::FIELDS {
                                 if &name == field {
@@ -76,12 +91,16 @@ impl AttributesBuilder {
                         }
 
                         if let Some(field) = insert_field {
-                            if self.fields.insert(field, state).is_some()
+                            // error for this invariant:
+                            // #[shorthand(enable(const_fn, const_fn))]
+                            if self.fields.insert(field, (state, inner.span())).is_some()
                                 && !(field == "forward_attributes" || field == "forward_everything")
                             {
                                 // error if insert was already called -> duplicate field
                                 self.errors.push(
-                                    Error::duplicate_field(field).with_span(&inner).at(&ident),
+                                    Error::custom(format!("duplicate field `{}`", field))
+                                        .with_span(&inner)
+                                        .at(&ident),
                                 );
                             }
                         }
@@ -101,17 +120,46 @@ impl AttributesBuilder {
                     }
                 }
             }
+        } else {
+            // TODO: error
         }
 
         self
     }
 
-    pub fn build_with(self, mut result: Attributes) -> Result<Attributes, Error> {
+    pub fn build_with(mut self, mut result: Attributes) -> Result<Attributes, Error> {
+        // loop through all fields of result:
+        for (k, v) in result.as_map() {
+            if k == "forward_attributes" || k == "forward_everything" {
+                continue;
+            }
+            if let Some(value) = self.fields.get(&k) {
+                if v == value.0 {
+                    let state = {
+                        if v {
+                            "enabled"
+                        } else {
+                            "disabled"
+                        }
+                    };
+
+                    self.errors.push(
+                        Error::custom(format!(
+                            "redundant field `{}`, which is already {}",
+                            k, state
+                        ))
+                        .with_span(&value.1)
+                        .at(k),
+                    );
+                }
+            }
+        }
+
+        result.with_map(&self.fields.into_iter().map(|(k, v)| (k, v.0)).collect());
+
         if !self.errors.is_empty() {
             return Err(Error::multiple(self.errors));
         }
-
-        result.with_map(&self.fields);
 
         Ok(result)
     }
@@ -145,8 +193,14 @@ pub(crate) struct Attributes {
 }
 
 impl Attributes {
-    pub fn builder() -> AttributesBuilder {
-        AttributesBuilder::default()
+    pub fn builder() -> AttributesBuilder { AttributesBuilder::default() }
+
+    pub fn with_meta(result: Self, ident: &str, item: &Meta) -> Result<Self, Error> {
+        let mut builder = Self::builder();
+
+        builder.push_meta(ident, item);
+
+        builder.build_with(result)
     }
 }
 

@@ -8,8 +8,6 @@ struct Command<'a, T: Copy> {
 }
 
 #[test]
-fn test_set() {
-    let _: &mut Command<usize> = Command::default().set_value("".to_string());
-}
+fn test_set() { let _: &mut Command<usize> = Command::default().set_value("".to_string()); }
 
 fn main() {}

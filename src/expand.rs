@@ -10,6 +10,7 @@ use crate::utils::{AttributeExt, PathExt, TypeExt};
 pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
     let name = &input.ident;
     let mut errors = vec![];
+    //dbg!(&input.attrs);
 
     let options = Options::from_derive_input(input).map_err(crate::Error::darling)?;
 
@@ -84,9 +85,7 @@ struct Generator<'a> {
 }
 
 impl<'a> Generator<'a> {
-    pub const fn from_options(options: &'a Options) -> Self {
-        Self { options }
-    }
+    pub const fn from_options(options: &'a Options) -> Self { Self { options } }
 
     fn parse_template<T: AsRef<str>>(template: T, argument: &Ident) -> Result<Ident, Error> {
         let mut parts = template.as_ref().splitn(2, "{}");
@@ -112,17 +111,13 @@ impl<'a> Generator<'a> {
         // -> without template -> `field`
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(
-                    options.get_format.as_ref().map_or("{}", |s| s.as_str()),
-                    field_name,
-                )
-                .unwrap()
+                Self::parse_template(&options.rename.get_format, field_name).unwrap()
             } else {
                 field_name.clone()
             }
         };
 
-        let mut attributes: Vec<Attribute> = options.attrs.iter().cloned().collect();
+        let mut attributes: Vec<Attribute> = options.attrs.clone();
         let arguments = vec![quote![&self]];
         let visibility = options.visibility();
         let mut assertions = vec![];
@@ -156,8 +151,8 @@ impl<'a> Generator<'a> {
             }
         };
 
-        // if the copy field has been enabled an assertion is needed, that ensures, that the
-        // type implements `Copy`.
+        // if the copy field has been enabled an assertion is needed, that ensures, that
+        // the type implements `Copy`.
         if options.attributes.copy {
             // this will expand to for example
             // struct _AssertCopy where usize: Copy;
@@ -197,11 +192,7 @@ impl<'a> Generator<'a> {
         // -> without template -> `set_field`
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(
-                    options.set_format.as_ref().map_or("set_{}", |s| s.as_str()),
-                    field_name,
-                )
-                .unwrap()
+                Self::parse_template(&options.rename.set_format, field_name).unwrap()
             } else {
                 format_ident!("set_{}", field_name)
             }
@@ -230,7 +221,7 @@ impl<'a> Generator<'a> {
         };
 
         // Attributes like `#[allow(clippy::use_self)]`
-        let mut attributes: Vec<Attribute> = options.attrs.iter().cloned().collect();
+        let mut attributes: Vec<Attribute> = options.attrs.clone();
 
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
@@ -255,20 +246,13 @@ impl<'a> Generator<'a> {
     ) -> Result<TokenStream, Error> {
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(
-                    options
-                        .try_set_format
-                        .as_ref()
-                        .map_or("try_{}", |s| s.as_str()),
-                    field_name,
-                )
-                .unwrap()
+                Self::parse_template(&options.rename.try_set_format, field_name).unwrap()
             } else {
                 format_ident!("try_{}", field_name)
             }
         };
 
-        let mut attributes: Vec<Attribute> = options.attrs.iter().cloned().collect();
+        let mut attributes: Vec<Attribute> = options.attrs.clone();
 
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
@@ -297,20 +281,13 @@ impl<'a> Generator<'a> {
     ) -> Result<TokenStream, Error> {
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(
-                    options
-                        .get_mut_format
-                        .as_ref()
-                        .map_or("{}_mut", |s| s.as_str()),
-                    field_name,
-                )
-                .unwrap()
+                Self::parse_template(&options.rename.get_mut_format, field_name).unwrap()
             } else {
                 format_ident!("{}_mut", field_name)
             }
         };
 
-        let mut attributes: Vec<Attribute> = options.attrs.iter().cloned().collect();
+        let mut attributes: Vec<Attribute> = options.attrs.clone();
 
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
@@ -330,7 +307,7 @@ impl<'a> Generator<'a> {
         })
     }
 
-    // Supported collections:
+    // TODO: Supported collections:
     // BTreeMap, HashMap,
     // BTreeSet, HashSet,
     // BinaryHeap,
@@ -343,7 +320,7 @@ impl<'a> Generator<'a> {
         field_type: &Type,
     ) -> Result<TokenStream, Error> {
         let visibility = options.visibility();
-        let mut attributes: Vec<Attribute> = options.attrs.iter().cloned().collect();
+        let mut attributes: Vec<Attribute> = options.attrs.clone();
 
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
@@ -375,8 +352,8 @@ impl<'a> Generator<'a> {
         }
     }
 
-    /// This function generates the Functions for a [`Field`], based on the [`Options`] and the
-    /// [`Field`] itself.
+    /// This function generates the Functions for a [`Field`], based on the
+    /// [`Options`] and the [`Field`] itself.
     pub fn generate(&self, field: &Field) -> Result<TokenStream, Error> {
         let options = self.options.with_attrs(&field.attrs)?;
 
@@ -384,8 +361,8 @@ impl<'a> Generator<'a> {
             if let Some(ident) = field.ident.as_ref() {
                 ident
             } else {
-                // This shouldn't be reached, because expand::derive ensures, that all fields have
-                // a name.
+                // This shouldn't be reached, because expand::derive ensures, that all fields
+                // have a name.
                 unreachable!("unnamed field guard failed");
             }
         };

@@ -7,8 +7,6 @@ struct Example {
 }
 
 #[test]
-fn test_get_mut() {
-    let _: &String = Example::default().value_mut();
-}
+fn test_get_mut() { let _: &String = Example::default().value_mut(); }
 
 fn main() {}

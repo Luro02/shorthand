@@ -9,31 +9,27 @@ pub fn derive(input: &DeriveInput) -> syn::Result<TokenStream> {
     let idents = {
         let mut result = vec![];
 
-        match &input.data {
-            Data::Struct(s) => match &s.fields {
-                Fields::Named(named) => {
-                    for field in &named.named {
-                        if let Some(ident) = &field.ident {
-                            result.push(ident.clone());
-                            types.push(field.ty.clone());
-                        } else {
-                            unreachable!("field has no name");
-                        }
+        if let Data::Struct(s) = &input.data {
+            if let Fields::Named(named) = &s.fields {
+                for field in &named.named {
+                    if let Some(ident) = &field.ident {
+                        result.push(ident.clone());
+                        types.push(field.ty.clone());
+                    } else {
+                        unreachable!("field has no name");
                     }
                 }
-                _ => {
-                    errors.push(Error::new_spanned(
-                        &s.fields,
-                        "Unnamed Fields are not supported.",
-                    ));
-                }
-            },
-            _ => {
+            } else {
                 errors.push(Error::new_spanned(
-                    &input.ident,
-                    "Enums/Unions are not supported.",
+                    &s.fields,
+                    "Unnamed Fields are not supported.",
                 ));
             }
+        } else {
+            errors.push(Error::new_spanned(
+                &input.ident,
+                "Enums/Unions are not supported.",
+            ));
         }
 
         result
@@ -70,6 +66,16 @@ pub fn derive(input: &DeriveInput) -> syn::Result<TokenStream> {
                         _ => {},
                     }
                 )*
+            }
+
+            fn as_map(&self) -> ::std::collections::HashMap<&'static str, Self::Value> {
+                let mut result = ::std::collections::HashMap::new();
+
+                #(
+                    result.insert(#keys, self.#idents.clone());
+                )*
+
+                result
             }
         }
     })

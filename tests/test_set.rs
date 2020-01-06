@@ -6,8 +6,6 @@ struct Command {
 }
 
 #[test]
-fn test_set() {
-    let _: &mut Command = Command::default().set_value("".to_string());
-}
+fn test_set() { let _: &mut Command = Command::default().set_value("".to_string()); }
 
 fn main() {}

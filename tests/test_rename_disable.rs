@@ -1,7 +1,7 @@
 use shorthand::ShortHand;
 
 #[derive(ShortHand, Default)]
-#[shorthand(rename("hello_{}_world"))]
+#[shorthand(rename(format = "hello_{}_world"))]
 struct Command {
     first: usize,
     #[shorthand(disable(rename))]
@@ -17,6 +17,7 @@ fn test_rename_disable() {
     let _: &mut Command = Command::default().set_second(0);
 }
 
-// TODO: test/define behaviour when `format`, `get` and `set` overwrite each other
+// TODO: test/define behaviour when `format`, `get` and `set` overwrite each
+// other
 
 fn main() {}

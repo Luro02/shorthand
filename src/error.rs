@@ -25,15 +25,11 @@ impl fmt::Display for Error {
 }
 
 impl From<darling::Error> for Error {
-    fn from(value: darling::Error) -> Self {
-        Self::darling(value)
-    }
+    fn from(value: darling::Error) -> Self { Self::darling(value) }
 }
 
 impl From<syn::Error> for Error {
-    fn from(value: syn::Error) -> Self {
-        Self::syn(value)
-    }
+    fn from(value: syn::Error) -> Self { Self::syn(value) }
 }
 
 impl Error {

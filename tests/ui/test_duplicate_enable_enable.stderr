@@ -1,0 +1,17 @@
+error: duplicate field `const_fn`
+ --> $DIR/test_duplicate_enable_enable.rs:7:34
+  |
+7 |     #[shorthand(enable(const_fn, const_fn))]
+  |                                  ^^^^^^^^
+
+error: redundant field `const_fn`, which is already enabled
+  --> $DIR/test_duplicate_enable_enable.rs:10:24
+   |
+10 |     #[shorthand(enable(const_fn))]
+   |                        ^^^^^^^^
+
+error: redundant field `copy`, which is already enabled
+  --> $DIR/test_duplicate_enable_enable.rs:13:24
+   |
+13 |     #[shorthand(enable(copy))]
+   |                        ^^^^

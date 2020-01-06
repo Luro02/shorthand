@@ -1,4 +1,4 @@
-error: Unsupported format
+error: Invalid format
  --> $DIR/test_rename_meta_name_value.rs:5:17
   |
 5 |     #[shorthand(rename = "example")]

@@ -1,3 +1,4 @@
+#![warn(clippy::pedantic, clippy::nursery)]
 extern crate proc_macro;
 
 mod expand;

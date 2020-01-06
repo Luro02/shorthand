@@ -1,4 +1,4 @@
-error: Unknown field: `garbage`
+error: expected literal
  --> $DIR/test_unknown_visibility.rs:4:13
   |
 4 | #[shorthand(visibility(garbage))]

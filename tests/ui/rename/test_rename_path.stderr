@@ -1,4 +1,4 @@
-error: Unexpected field `rename`
+error: Invalid format
  --> $DIR/test_rename_path.rs:5:17
   |
 5 |     #[shorthand(rename)]

@@ -4,8 +4,8 @@ use shorthand::ShortHand;
 struct Number(usize);
 
 #[derive(ShortHand, Default)]
+#[shorthand(enable(copy))]
 struct Command {
-    #[shorthand(enable(copy))]
     index: Number,
     #[shorthand(disable(copy))]
     index2: Number,
@@ -16,7 +16,7 @@ struct Command {
 fn test_copy() {
     let _: Number = Command::default().index();
     let _: &Number = Command::default().index2();
-    let _: &Number = Command::default().index3();
+    let _: Number = Command::default().index3();
 }
 
 fn main() {}

@@ -1,16 +1,19 @@
+#![warn(clippy::pedantic, clippy::nursery)]
 //! This crate is based on
 //! <https://cprimozic.net/blog/writing-a-hashmap-to-struct-procedural-macro-in-rust/>
 //!
 //! There was sadly no crate available, so I had to make my own :(
 //!
-//! I made some improvements to the code and ported it to a newer version of syn.
-//! For example the FromHashMap trait doesn't need a type parameter and the HashMap should
-//! contain static str (field names should be known at compile time).
+//! I made some improvements to the code and ported it to a newer version of
+//! [`syn`]. For example the [`FromHashMap`] trait doesn't need a type parameter
+//! and the [`HashMap`] should contain static str (field names should be known
+//! at compile time).
 use std::collections::HashMap;
 
 pub trait FromMap: Default {
     type Value;
 
+    #[must_use]
     fn from_map(input: &HashMap<&'static str, Self::Value>) -> Self {
         let mut result = Self::default();
         FromMap::with_map(&mut result, input);
@@ -18,6 +21,8 @@ pub trait FromMap: Default {
     }
 
     fn with_map(&mut self, input: &HashMap<&'static str, Self::Value>);
+
+    fn as_map(&self) -> HashMap<&'static str, Self::Value> { HashMap::new() }
 }
 
 pub use hashmap_derive::FromMap;

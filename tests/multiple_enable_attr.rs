@@ -1,7 +1,7 @@
 use shorthand::ShortHand;
 
 #[derive(ShortHand, Default)]
-#[shorthand(enable(option_as_ref))]
+#[shorthand(enable(into))]
 #[shorthand(enable(copy))]
 pub struct Command {
     index: usize,
@@ -11,7 +11,7 @@ pub struct Command {
 #[test]
 fn test_multiple_enable() {
     let _: Option<usize> = Command::default().optional();
-    let _: usize = Command::default().index();
+    let _: &mut Command = Command::default().set_index(0_u8);
 }
 
 fn main() {}
