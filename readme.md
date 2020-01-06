@@ -5,7 +5,7 @@ shorthand
 and that is exactly what this library is for; to remove the annoying
 boilerplate code, that comes with writing your own library.
 
-# What does this library do?
+## What does this library do?
 
 It makes coding in rust a lot more convenient, by deriving `getters` and
 `setters` for the fields of a struct.
@@ -60,7 +60,7 @@ impl Example {
 }
 ```
 
-# How do I get started?
+## How do I get started?
 
 Simply add this library under `[dependencies]` to your `Cargo.toml`
 ```toml
@@ -81,7 +81,7 @@ struct Example {
 
 You can find the [documentation here](https://docs.rs/shorthand).
 
-# Feature Requests and Bug Reports
+## Feature Requests and Bug Reports
 
 Feel free to ask questions or report bugs [here](https://www.github.com/luro02/shorthand).
 There are no stupid questions.
@@ -89,12 +89,12 @@ There are no stupid questions.
 This library should be as convenient as possible, so please do not hesitate
 to request a feature.
 
-# Planned Features
+## Planned Features
 - function documentation `#[shorthand(doc(file = "", function = ""))]`
 - mut getter
 - `no_std`
 
-# Reference
+## Reference
 
 This library has been inspired by the following crates
 - [`getset`] (just the issue tracker and which features were requested)
