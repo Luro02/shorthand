@@ -1,8 +1,9 @@
 use syn::parse::{Parse, ParseStream};
-use syn::{Error, Lit, Meta, NestedMeta, Token};
+use syn::{Lit, Meta, NestedMeta, Token};
 
+use crate::error::Error;
 use crate::parser::parse_shorthand;
-use crate::utils::{ErrorExt, PathExt};
+use crate::utils::PathExt;
 
 mod kw {
     syn::custom_keyword!(rename);
@@ -21,36 +22,24 @@ fn parse_format(lit: &Lit) -> syn::Result<String> {
         // check for invariants (too many `{}` or missing `{}`)
         match lit_str.value().matches("{}").count() {
             0 => {
-                Err(Error::new_spanned(
+                Err(syn::Error::new_spanned(
                     lit_str,
                     "Missing `{}` in format string.",
                 ))
             }
             1 => Ok(lit_str.value()),
             _ => {
-                Err(Error::new_spanned(
+                Err(syn::Error::new_spanned(
                     lit_str,
                     "More than one `{}` in format string.",
                 ))
             }
         }
     } else {
-        // TODO: maybe parse through all arguments at once and then
-        // return an       error?
-        Err(Error::new_spanned(
-            &lit,
-            // TODO:
-            darling::Error::unexpected_lit_type(&lit),
-        ))
+        Err(Error::unexpected_lit_type(lit).with_span(&lit).into())
     }
 }
 
-// #[shorthand(rename("prefix_{}_suffix"))]
-// #[shorthand(rename(format = "prefix_{}_suffix"))]
-// rename(get = "prefix_{}_suffix")
-// rename(set = "prefix_{}_suffix")
-// rename(try_set = "prefix_{}_suffix")
-// rename(get_mut = "prefix_{}_suffix")
 impl Parse for Rename {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         let mut result = Self::default();
@@ -59,10 +48,12 @@ impl Parse for Rename {
         let mut errors = vec![];
 
         for meta in input.parse_terminated::<Meta, Token![,]>(Meta::parse)? {
+            // ignore other attributes like `#[shorthand(enable)]`
             if !meta.path().is_ident("rename") {
                 continue;
             }
 
+            // #[shorthand(rename(x, y, z))]
             if let Meta::List(list) = meta {
                 for nested in list.nested {
                     match nested {
@@ -92,24 +83,14 @@ impl Parse for Rename {
 
                                     result.get_mut_format = value.clone();
                                 } else {
-                                    errors.push(Error::new_spanned(
-                                        &pair.path,
-                                        format!("Unknown field: `{}`", pair.path.to_string()),
-                                    ));
+                                    errors.push(
+                                        Error::unknown_field(&pair.path.to_string())
+                                            .with_span(&pair.path),
+                                    );
                                 }
                             } else {
-                                let format = {
-                                    match meta {
-                                        Meta::Path(_) => "Path",
-                                        Meta::List(_) => "List",
-                                        _ => unreachable!(),
-                                    }
-                                };
-
-                                errors.push(Error::new_spanned(
-                                    &meta,
-                                    format!("Unexpected meta-item format `{}`", format),
-                                ));
+                                errors
+                                    .push(Error::unexpected_meta(&meta).with_alts(&["NameValue"]));
                             }
                         }
                         NestedMeta::Lit(lit) => {
@@ -122,14 +103,16 @@ impl Parse for Rename {
                     }
                 }
             } else {
-                errors.push(Error::new_spanned(&meta, "Invalid format"));
+                // #[shorthand(rename)]
+                // #[shorthand(rename = "")]
+                errors.push(Error::unexpected_meta(&meta).with_alts(&["List"]));
             }
         }
 
         if errors.is_empty() {
             Ok(result)
         } else {
-            Err(Error::multiple(errors))
+            Err(Error::multiple(errors).into())
         }
     }
 }

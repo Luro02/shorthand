@@ -76,9 +76,12 @@ impl Parse for Forward {
         if lookahead.peek(Token![#]) {
             Self::parse_inner(&parse_shorthand(input)?)
         } else if lookahead.peek(kw::enable) || lookahead.peek(kw::disable) {
-            Self::parse_inner(&input)
+            Self::parse_inner(input)
         } else {
-            unimplemented!("Attribute does neither start with `#` nor with `enable`/`disable`")
+            // TODO: customize?
+            Err(lookahead.error())
+            //unimplemented!("Attribute does neither start with `#` nor with
+            // `enable`/`disable`")
         }
     }
 }

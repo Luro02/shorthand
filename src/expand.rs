@@ -1,9 +1,9 @@
-use darling::{Error, FromDeriveInput};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, quote_spanned};
 use syn::spanned::Spanned;
 use syn::{Attribute, Data, DeriveInput, Field, Fields, Ident, Type};
 
+use crate::error::Error;
 use crate::options::Options;
 use crate::utils::{AttributeExt, PathExt, TypeExt};
 
@@ -12,7 +12,7 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
     let mut errors = vec![];
     //dbg!(&input.attrs);
 
-    let options = Options::from_derive_input(input).map_err(crate::Error::darling)?;
+    let options = Options::from_derive_input(input)?;
 
     let mut functions = vec![];
 
@@ -36,24 +36,24 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
                 // A TupleStruct has no field names.
                 Fields::Unnamed(_) => {
                     errors
-                        .push(Error::custom("Tuple structs are not supported.").with_span(&input));
+                        .push(Error::custom("tuple structs are not supported.").with_span(&input));
                 }
                 // A Unit has no fields.
                 Fields::Unit => {
-                    errors.push(Error::custom("Unit structs are not supported.").with_span(&input));
+                    errors.push(Error::custom("unit structs are not supported.").with_span(&input));
                 }
             }
         }
         Data::Enum(_) => {
-            errors.push(Error::custom("Enum are not supported.").with_span(&input));
+            errors.push(Error::custom("enum are not supported.").with_span(&input));
         }
         Data::Union(_) => {
-            errors.push(Error::custom("Union structs are not supported.").with_span(&input));
+            errors.push(Error::custom("union structs are not supported.").with_span(&input));
         }
     }
 
     if !errors.is_empty() {
-        return Err(Error::multiple(errors).into());
+        return Err(Error::multiple(errors));
     }
 
     let (impl_generics, ty_generics, where_clause) = options.generics.split_for_impl();
@@ -65,10 +65,9 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
         {
             // TODO: test error
             return Err(Error::custom(
-                "A generic called `VALUE` is not supported, please rename it.",
+                "a generic called `VALUE` is not supported, please rename it.",
             )
-            .with_span(&options.generics)
-            .into());
+            .with_span(&options.generics));
         }
     }
 
@@ -95,7 +94,7 @@ impl<'a> Generator<'a> {
             .next()
             // this will return `None`, if the template doesn't contain `{}`, which should
             // never happen, because this is checked while parsing the format.
-            .ok_or_else(|| Error::custom("Missing `{}` in template."))?;
+            .ok_or_else(|| Error::custom("missing `{}` in template."))?;
 
         Ok(format_ident!("{}{}{}", prefix, argument, suffix))
     }

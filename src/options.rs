@@ -1,8 +1,8 @@
-use darling::{Error, FromDeriveInput, FromGenerics};
 use quote::quote;
 use syn::{Data, DeriveInput, Generics, Ident, Meta, NestedMeta, Visibility};
 
 use crate::attributes::Attributes;
+use crate::error::Error;
 use crate::forward::Forward;
 use crate::rename::Rename;
 use crate::utils::{MetaExt, PathExt};
@@ -86,7 +86,7 @@ impl Options {
                 match attr.parse_meta() {
                     Ok(val) => val,
                     Err(e) => {
-                        errors.push(Error::custom(&e).with_span(&e.span()));
+                        errors.push(Error::syn(e));
                         continue;
                     }
                 }
@@ -97,7 +97,7 @@ impl Options {
                     match syn::parse2(quote!(#attr)) {
                         Ok(val) => val,
                         Err(e) => {
-                            errors.push(Error::custom(&e).with_span(&e.span()));
+                            errors.push(Error::syn(e));
                             return Err(Error::multiple(errors));
                         }
                     }
@@ -137,10 +137,8 @@ impl Options {
                                             Ok(value) => {
                                                 result.visibility = value.into_inner();
                                             }
-                                            Err(e) => {
-                                                errors.push(
-                                                    Error::custom(e).with_span(&inner).at(field),
-                                                );
+                                            Err(err) => {
+                                                errors.push(Error::syn(err));
                                             }
                                         }
                                     } else if field == &"rename" {
@@ -149,10 +147,7 @@ impl Options {
                                                 result.rename = attr;
                                             }
                                             Err(err) => {
-                                                errors.push(
-                                                    darling::Error::custom(&err)
-                                                        .with_span(&err.span()),
-                                                );
+                                                errors.push(Error::syn(err));
                                             }
                                         }
                                     } else {
@@ -166,9 +161,9 @@ impl Options {
                             // If the field is `unknown` add it to the list of `errors`:
                             if unknown {
                                 errors.push(
-                                    Error::unknown_field_with_alts(name.as_str(), &Self::FIELDS)
-                                        .with_span(&inner)
-                                        .at(&name),
+                                    Error::unknown_field(name.as_str())
+                                        .with_alts(&Self::FIELDS)
+                                        .with_span(&inner),
                                 );
                             }
                         }
@@ -203,11 +198,11 @@ impl Options {
     pub const fn visibility(&self) -> &Visibility { &self.visibility }
 }
 
-impl FromDeriveInput for Options {
-    fn from_derive_input(input: &DeriveInput) -> Result<Self, Error> {
+impl Options {
+    pub fn from_derive_input(input: &DeriveInput) -> Result<Self, Error> {
         let result = Self {
             ident: input.ident.clone(),
-            generics: FromGenerics::from_generics(&input.generics)?,
+            generics: input.generics.clone(),
             vis: input.vis.clone(),
             attrs: Vec::new(),
             data: input.data.clone(),

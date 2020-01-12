@@ -269,11 +269,6 @@
 //! This library should be as convenient as possible, so please do not hesitate
 //! to request a feature.
 //!
-//! # Planned Features
-//! - function documentation `#[shorthand(doc(file = "", function = ""))]`
-//! - mut getter
-//! - `no_std`
-//!
 //! # Reference
 //!
 //! This library has been inspired by the following crates
@@ -313,7 +308,7 @@ pub(crate) type Result<T> = std::result::Result<T, Error>;
 use proc_macro::TokenStream;
 use syn::{parse_macro_input, DeriveInput};
 
-/// A proc_macro to derive getter, mutgetter and setter for fields.
+/// A [`proc_macro`] to derive getter, mutgetter and setter for fields.
 ///
 /// A list of all attributes can be found [here](index.html#attributes).
 ///
@@ -724,7 +719,7 @@ use syn::{parse_macro_input, DeriveInput};
 /// }
 /// ```
 ///
-/// as you can see the line `/// This part will not be forwarded.` didn't get
+/// as you can see the line `/// This part will not be forwarded.` did not get
 /// forwarded.
 ///
 /// ## `forward_everything`
@@ -738,9 +733,7 @@ use syn::{parse_macro_input, DeriveInput};
 pub fn shorthand(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree
     let input = parse_macro_input!(input as DeriveInput);
-    let result = expand::derive(&input)
+    expand::derive(&input)
         .unwrap_or_else(error::Error::into_token_stream)
-        .into();
-
-    result
+        .into()
 }

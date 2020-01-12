@@ -1,4 +1,4 @@
-error: Enum are not supported.
+error: enum are not supported.
  --> $DIR/test_enum.rs:4:1
   |
 4 | / enum ExampleEnum {

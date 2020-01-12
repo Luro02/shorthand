@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use darling::Error;
 use from_map::FromMap;
 use proc_macro2::Span;
 use syn::spanned::Spanned;
 use syn::{Meta, NestedMeta};
 
+use crate::error::Error;
 use crate::utils::MetaExt;
 
 #[derive(Default)]
@@ -66,11 +66,8 @@ impl AttributesBuilder {
                         if name == "rename" {
                             // #[shorthand(enable(rename))] is invalid
                             if state {
-                                self.errors.push(
-                                    Error::custom("Unexpected field `rename`")
-                                        .with_span(&inner)
-                                        .at(&ident),
-                                );
+                                self.errors
+                                    .push(Error::unexpected_field(&name).with_span(&inner));
                             } else {
                                 insert_field = Some("rename");
                             }
@@ -97,19 +94,16 @@ impl AttributesBuilder {
                                 && !(field == "forward_attributes" || field == "forward_everything")
                             {
                                 // error if insert was already called -> duplicate field
-                                self.errors.push(
-                                    Error::custom(format!("duplicate field `{}`", field))
-                                        .with_span(&inner)
-                                        .at(&ident),
-                                );
+                                self.errors
+                                    .push(Error::duplicate_field(field).with_span(&inner));
                             }
                         }
 
                         if unknown {
                             self.errors.push(
-                                Error::unknown_field_with_alts(name.as_str(), &Self::FIELDS)
-                                    .with_span(&inner)
-                                    .at(&ident),
+                                Error::unknown_field(name.as_str())
+                                    .with_alts(&Self::FIELDS)
+                                    .with_span(&inner),
                             );
                         }
                     }
@@ -143,14 +137,8 @@ impl AttributesBuilder {
                         }
                     };
 
-                    self.errors.push(
-                        Error::custom(format!(
-                            "redundant field `{}`, which is already {}",
-                            k, state
-                        ))
-                        .with_span(&value.1)
-                        .at(k),
-                    );
+                    self.errors
+                        .push(Error::redundant_field(k, Some(state)).with_span(&value.1));
                 }
             }
         }

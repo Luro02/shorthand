@@ -41,7 +41,7 @@ impl ErrorExt for syn::Error {
         let mut errors = errors.into_iter();
         let mut result = errors
             .next()
-            .expect("Failed to create an Error from an empty Iterator");
+            .expect("failed to create an Error from an empty Iterator");
 
         for error in errors {
             result.combine(error);

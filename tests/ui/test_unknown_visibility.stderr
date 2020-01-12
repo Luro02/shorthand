@@ -1,5 +1,5 @@
 error: expected literal
- --> $DIR/test_unknown_visibility.rs:4:13
+ --> $DIR/test_unknown_visibility.rs:4:24
   |
 4 | #[shorthand(visibility(garbage))]
-  |             ^^^^^^^^^^^^^^^^^^^
+  |                        ^^^^^^^

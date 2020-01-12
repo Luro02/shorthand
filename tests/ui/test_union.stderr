@@ -1,4 +1,4 @@
-error: Union structs are not supported.
+error: union structs are not supported.
  --> $DIR/test_union.rs:4:1
   |
 4 | / #[repr(C)]

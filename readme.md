@@ -93,11 +93,6 @@ There are no stupid questions.
 This library should be as convenient as possible, so please do not hesitate
 to request a feature.
 
-## Planned Features
-- function documentation `#[shorthand(doc(file = "", function = ""))]`
-- mut getter
-- `no_std`
-
 ## Reference
 
 This library has been inspired by the following crates
