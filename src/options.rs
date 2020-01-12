@@ -135,7 +135,9 @@ impl Options {
                                     } else if field == &"visibility" {
                                         match syn::parse2::<FieldVisibility>(quote!(#attr)) {
                                             Ok(value) => {
-                                                result.visibility = value.into_inner();
+                                                result.visibility = value
+                                                    .into_inner()
+                                                    .unwrap_or_else(|| result.vis.clone());
                                             }
                                             Err(err) => {
                                                 errors.push(Error::syn(err));
@@ -208,7 +210,9 @@ impl Options {
             data: input.data.clone(),
             forward: Forward::default(),
 
-            visibility: FieldVisibility::default().into_inner(),
+            visibility: FieldVisibility::default()
+                .into_inner()
+                .unwrap_or_else(|| input.vis.clone()),
             attributes: Attributes::default(),
             rename: Rename::default(),
         };

@@ -3,19 +3,27 @@
 use syn::parse::{Parse, ParseStream};
 use syn::{LitStr, Visibility};
 
+use crate::error::Error;
 use crate::parser::parse_shorthand;
 
 mod kw {
     syn::custom_keyword!(visibility);
+    syn::custom_keyword!(inherit);
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub(crate) struct FieldVisibility {
-    pub visibility: Visibility,
+pub enum FieldVisibility {
+    Visible(Visibility),
+    Inherit,
 }
 
 impl FieldVisibility {
-    pub fn into_inner(self) -> Visibility { self.visibility }
+    pub fn into_inner(self) -> Option<Visibility> {
+        match self {
+            Self::Visible(vis) => Some(vis),
+            Self::Inherit => None,
+        }
+    }
 }
 
 impl Parse for FieldVisibility {
@@ -40,18 +48,23 @@ impl Parse for FieldVisibility {
         let content;
         syn::parenthesized!(content in sub);
 
-        Ok(Self {
-            visibility: content.parse::<LitStr>()?.parse()?,
-        })
+        let lookahead = content.lookahead1();
+
+        if let Ok(lit_str) = content.parse::<LitStr>() {
+            Ok(Self::Visible(lit_str.parse()?))
+        } else if lookahead.peek(kw::inherit) {
+            content.parse::<kw::inherit>()?;
+            Ok(Self::Inherit)
+        } else {
+            Err(Error::custom("expected literal or `inherit`")
+                .with_span(&lookahead.error().span())
+                .into())
+        }
     }
 }
 
 impl Default for FieldVisibility {
-    fn default() -> Self {
-        Self {
-            visibility: syn::parse_str("pub").unwrap(),
-        }
-    }
+    fn default() -> Self { Self::Visible(syn::parse_str("pub").unwrap()) }
 }
 
 #[cfg(test)]
@@ -66,7 +79,7 @@ mod tests {
             syn::parse2::<FieldVisibility>(quote!(#[shorthand(visibility("pub"))]))
                 .unwrap()
                 .into_inner(),
-            syn::parse_str("pub").unwrap()
+            Some(syn::parse_str("pub").unwrap())
         );
 
         // TODO: add more tests, for example what should fail

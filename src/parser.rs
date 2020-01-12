@@ -26,9 +26,6 @@ pub fn parse_shorthand(input: ParseStream) -> syn::Result<ParseBuffer> {
     Ok(result)
 }
 
-// TODO: this should parse x = "", y = z, ...
-// fn parse_keyword_list() -> Vec<(Path, Value)> {}
-
 pub fn parse_enable_disable(input: ParseStream) -> syn::Result<(bool, ParseBuffer)> {
     let lookahead = input.lookahead1();
     if lookahead.peek(kw::enable) {

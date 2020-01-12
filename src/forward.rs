@@ -6,13 +6,8 @@ use quote::quote;
 use syn::parse::{Parse, ParseStream};
 use syn::{Meta, NestedMeta, Token};
 
-use crate::parser::parse_shorthand;
+use crate::parser::{parse_enable_disable, parse_shorthand};
 use crate::utils::PathExt;
-
-mod kw {
-    syn::custom_keyword!(enable);
-    syn::custom_keyword!(disable);
-}
 
 #[derive(Clone, PartialEq)]
 pub struct Forward {
@@ -66,46 +61,11 @@ impl fmt::Debug for Forward {
 }
 
 impl Parse for Forward {
-    // Parses the following format:
-    // enable(forward())
-    // disable(forward())
-    // It ignores all other attributes!
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        // parse outer attribute, if it exists (#[shorthand(inner_attribute)])
-        let lookahead = input.lookahead1();
-        if lookahead.peek(Token![#]) {
-            Self::parse_inner(&parse_shorthand(input)?)
-        } else if lookahead.peek(kw::enable) || lookahead.peek(kw::disable) {
-            Self::parse_inner(input)
-        } else {
-            // TODO: customize?
-            Err(lookahead.error())
-            //unimplemented!("Attribute does neither start with `#` nor with
-            // `enable`/`disable`")
-        }
-    }
-}
+        let input = parse_shorthand(input)?;
+        let (state, input) = parse_enable_disable(&input)?;
 
-impl Forward {
-    pub fn parse_inner(input: ParseStream) -> syn::Result<Self> {
-        let lookahead = input.lookahead1();
-        let state = {
-            if lookahead.peek(kw::enable) {
-                input.parse::<kw::enable>()?;
-                true
-            } else if lookahead.peek(kw::disable) {
-                input.parse::<kw::disable>()?;
-                false
-            } else {
-                // TODO: customize/test?
-                return Err(lookahead.error());
-            }
-        };
-
-        let inner;
-        syn::parenthesized!(inner in input);
-
-        for nested in inner.parse_terminated::<_, Token![,]>(syn::NestedMeta::parse)? {
+        for nested in input.parse_terminated::<_, Token![,]>(syn::NestedMeta::parse)? {
             if let NestedMeta::Meta(meta) = nested {
                 if meta.path().is_ident("forward") {
                     // enable(forward)  -> everything will be forwarded, by default
@@ -147,7 +107,9 @@ impl Forward {
 
         unimplemented!("Nothing inside the attribute.");
     }
+}
 
+impl Forward {
     pub fn is_forward(meta: &Meta) -> bool {
         // #[shorthand(enable(forward, x))]
         // #[shorthand(disable(forward, x))]
@@ -167,8 +129,6 @@ impl Forward {
     }
 
     pub fn update(mut self, other: &Self) -> Self {
-        // dbg!(&self);
-        // dbg!(&other);
         for (key, value) in &other.fields {
             if let Some(v) = self.fields.get_mut(key) {
                 *v = *value;
@@ -176,15 +136,12 @@ impl Forward {
                 self.fields.insert(key.clone(), *value);
             }
         }
-        // dbg!(&self);
 
         self
     }
 
     pub fn is(&self, input: &str) -> bool {
         let result = self.default_state;
-
-        //dbg!(&self.fields);
 
         for (key, value) in &self.fields {
             if key.is_ident(input) {
@@ -204,7 +161,7 @@ mod tests {
     fn parse_forward() {
         // TODO: discard this kind of attributes, only absolute ones are supported!
         // #[shorthand(enable(forward))] instead of just enable(forward)
-        let _forward: Forward = syn::parse_str("enable(forward)").unwrap();
-        let _forward: Forward = syn::parse_str("enable(forward(x, y, z))").unwrap();
+        let _forward: Forward = syn::parse_str("#[shorthand(enable(forward))]").unwrap();
+        let _forward: Forward = syn::parse_str("#[shorthand(enable(forward(x, y, z)))]").unwrap();
     }
 }

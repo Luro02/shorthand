@@ -144,9 +144,11 @@
 //! This attribute allows you to change the visibility of the derived function.
 //! Anything from
 //! [here](https://doc.rust-lang.org/reference/visibility-and-privacy.html#visibility-and-privacy)
-//! is valid.
-//! You can either apply this as a local or as a global attribute.
-//! The default visibility is `pub`.
+//! is valid. You can also set the visibility to `inherit`, all derived
+//! functions will then have the visibility of the struct.
+//!
+//! You can either apply this as a local or as a global attribute. The default
+//! visibility is `pub`.
 //!
 //! ```
 //! use shorthand::ShortHand;
@@ -157,6 +159,8 @@
 //!     field: usize,
 //!     #[shorthand(visibility("pub"))]
 //!     data: String,
+//!     #[shorthand(visibility(inherit))]
+//!     xt: String,
 //! }
 //! ```
 //!
