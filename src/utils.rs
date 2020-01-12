@@ -81,6 +81,8 @@ pub(crate) trait TypeExt {
     fn is_option(&self) -> bool;
 
     fn to_as_ref(&self) -> Option<TokenStream>;
+
+    fn is_reference(&self) -> bool;
 }
 
 impl TypeExt for Type {
@@ -122,9 +124,23 @@ impl TypeExt for Type {
         None
     }
 
+    fn is_reference(&self) -> bool {
+        match &self {
+            Self::Reference(_) => true,
+            _ => false,
+        }
+    }
+
     fn is_primitive_copy(&self) -> bool {
         let path = match &self {
+            // Array types of all sizes implement copy, if the item type implements copy.
+            Self::Array(ty) => return ty.elem.is_primitive_copy(),
+            Self::Group(ty) => return ty.elem.is_primitive_copy(),
+            Self::Paren(ty) => return ty.elem.is_primitive_copy(),
             Self::Path(ty) => &ty.path,
+            // mutable references do not implement copy:
+            Self::Reference(ty) => return ty.mutability.is_none(),
+            Self::Tuple(ty) => return !ty.elems.iter().map(|s| s.is_primitive_copy()).any(|e| !e),
             _ => return false,
         };
 

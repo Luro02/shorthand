@@ -11,6 +11,12 @@ fn tests() {
     t.pass("tests/collections/test_hashmap.rs");
     t.pass("tests/collections/test_hashset.rs");
 
+    // primitive_copy
+    t.pass("tests/primitive_copy/test_array.rs");
+    t.pass("tests/primitive_copy/test_paren.rs");
+    t.pass("tests/primitive_copy/test_reference.rs");
+    t.pass("tests/primitive_copy/test_tuple.rs");
+
     //
     t.compile_fail("tests/ui/test_tuple_struct.rs");
     t.compile_fail("tests/ui/test_unit_struct.rs");

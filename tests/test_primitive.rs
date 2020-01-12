@@ -1,105 +1,43 @@
-#[cfg(test)]
-use pretty_assertions::assert_eq;
 use shorthand::ShortHand;
 
 #[derive(ShortHand, Default)]
-pub struct Command {
-    index01: bool,
-    index02: char,
-    index03: f32,
-    index04: f64,
-    index05: i8,
-    index06: i16,
-    index07: i32,
-    index08: i64,
-    index09: i128,
-    index10: isize,
-    index11: u8,
-    index12: u16,
-    index13: u32,
-    index14: u64,
-    index15: u128,
-    index16: usize,
+pub struct Example {
+    value_01: bool,
+    value_02: char,
+    value_03: f32,
+    value_04: f64,
+    value_05: i8,
+    value_06: i16,
+    value_07: i32,
+    value_08: i64,
+    value_09: i128,
+    value_10: isize,
+    value_11: u8,
+    value_12: u16,
+    value_13: u32,
+    value_14: u64,
+    value_15: u128,
+    value_16: usize,
 }
 
 #[test]
-fn test_bool() {
-    assert_eq!(Command::default().index01(), false);
-}
-
-#[test]
-fn test_char() {
-    assert_eq!(Command::default().index02(), '\x00');
-}
-
-#[test]
-fn test_f32() {
-    assert_eq!(Command::default().index03(), 0.0_f32);
-}
-
-#[test]
-fn test_f64() {
-    assert_eq!(Command::default().index04(), 0.0_f64);
-}
-
-#[test]
-fn test_i8() {
-    assert_eq!(Command::default().index05(), 0_i8);
-}
-
-#[test]
-fn test_i16() {
-    assert_eq!(Command::default().index06(), 0_i16);
-}
-
-#[test]
-fn test_i32() {
-    assert_eq!(Command::default().index07(), 0_i32);
-}
-
-#[test]
-fn test_i64() {
-    assert_eq!(Command::default().index08(), 0_i64);
-}
-
-#[test]
-fn test_i128() {
-    assert_eq!(Command::default().index09(), 0_i128);
-}
-
-#[test]
-fn test_isize() {
-    assert_eq!(Command::default().index10(), 0_isize);
-}
-
-#[test]
-fn test_u8() {
-    assert_eq!(Command::default().index11(), 0_u8);
-}
-
-#[test]
-fn test_u16() {
-    assert_eq!(Command::default().index12(), 0_u16);
-}
-
-#[test]
-fn test_u32() {
-    assert_eq!(Command::default().index13(), 0_u32);
-}
-
-#[test]
-fn test_u64() {
-    assert_eq!(Command::default().index14(), 0_u64);
-}
-
-#[test]
-fn test_u128() {
-    assert_eq!(Command::default().index15(), 0_u128);
-}
-
-#[test]
-fn test_usize() {
-    assert_eq!(Command::default().index16(), 0_usize);
+fn test_primitive_copy() {
+    let _: bool = Example::default().value_01();
+    let _: char = Example::default().value_02();
+    let _: f32 = Example::default().value_03();
+    let _: f64 = Example::default().value_04();
+    let _: i8 = Example::default().value_05();
+    let _: i16 = Example::default().value_06();
+    let _: i32 = Example::default().value_07();
+    let _: i64 = Example::default().value_08();
+    let _: i128 = Example::default().value_09();
+    let _: isize = Example::default().value_10();
+    let _: u8 = Example::default().value_11();
+    let _: u16 = Example::default().value_12();
+    let _: u32 = Example::default().value_13();
+    let _: u64 = Example::default().value_14();
+    let _: u128 = Example::default().value_15();
+    let _: usize = Example::default().value_16();
 }
 
 fn main() {}

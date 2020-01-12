@@ -58,17 +58,16 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
 
     let (impl_generics, ty_generics, where_clause) = options.generics.split_for_impl();
 
-    if options.attributes.try_into || options.attributes.into {
-        if quote!(#impl_generics #ty_generics #where_clause)
+    if (options.attributes.try_into || options.attributes.into)
+        && quote!(#impl_generics #ty_generics #where_clause)
             .to_string()
             .contains("VALUE")
-        {
-            // TODO: test error
-            return Err(Error::custom(
-                "a generic called `VALUE` is not supported, please rename it.",
-            )
-            .with_span(&options.generics));
-        }
+    {
+        // TODO: test error
+        return Err(
+            Error::custom("a generic called `VALUE` is not supported, please rename it.")
+                .with_span(&options.generics),
+        );
     }
 
     Ok(quote! {
@@ -152,7 +151,12 @@ impl<'a> Generator<'a> {
 
         // if the copy field has been enabled an assertion is needed, that ensures, that
         // the type implements `Copy`.
-        if options.attributes.copy {
+        if options.attributes.copy
+            || (options.attributes.primitive_copy
+                && field_type.is_primitive_copy()
+                // the assertion does not work with lifetimes :(
+                && !field_type.is_reference())
+        {
             // this will expand to for example
             // struct _AssertCopy where usize: Copy;
             //
@@ -343,9 +347,9 @@ impl<'a> Generator<'a> {
                 self
             };
         } else if field_type.is_ident("BTreeMap")
-            | field_type.is_ident("BTreeSet")
-            | field_type.is_ident("HashMap")
-            | field_type.is_ident("HashSet")
+            || field_type.is_ident("BTreeSet")
+            || field_type.is_ident("HashMap")
+            || field_type.is_ident("HashSet")
         {
             let insert_args = (0..arguments.len() - 1).map(|i| format_ident!("value_{}", i));
             let assert_args = (0..arguments.len() - 1).map(|_| quote![()]);
@@ -389,15 +393,29 @@ impl<'a> Generator<'a> {
 
         let mut result = quote![];
 
-        if (options.attributes.ignore_phantomdata && field.ty.is_phantom_data())
+        if (options.attributes.ignore_phantomdata && field.ty.is_ident("PhantomData"))
             || options.attributes.skip
             || (options.attributes.ignore_underscore && {
-                if let Some(p) = field.ty.path() {
-                    p.to_string().starts_with('_')
+                field
+                    .ty
+                    .path()
+                    .map_or(false, |p| p.to_string().starts_with('_'))
+            })
+            || {
+                // empty tuple
+                if let syn::Type::Tuple(s) = &field.ty {
+                    s.elems.is_empty()
                 } else {
                     false
                 }
-            })
+            }
+            || {
+                if let syn::Type::Never(_) = &field.ty {
+                    true
+                } else {
+                    false
+                }
+            }
         {
             return Ok(quote![]);
         }
