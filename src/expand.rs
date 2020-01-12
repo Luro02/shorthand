@@ -306,20 +306,24 @@ impl<'a> Generator<'a> {
         })
     }
 
-    // TODO: Supported collections:
-    // BTreeMap, HashMap,
-    // BTreeSet, HashSet,
-    // BinaryHeap,
-    // VecDeque
-    // LinkedList
-    // Vec
     pub fn collection_magic(
         options: &Options,
         field_name: &Ident,
         field_type: &Type,
     ) -> Result<TokenStream, Error> {
         let visibility = options.visibility();
-        let mut attributes: Vec<Attribute> = options.attrs.clone();
+        let mut attributes = options.attrs.clone();
+
+        let type_name = Ident::new(&field_type.path().unwrap().to_string(), field_type.span());
+
+        let mut function_name = None;
+        let mut body = quote![];
+        let mut arguments = vec![quote!(&mut self)];
+
+        for (index, value) in field_type.arguments().unwrap().iter().enumerate() {
+            let ident = format_ident!("value_{}", index);
+            arguments.push(quote!(#ident: #value));
+        }
 
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
@@ -329,25 +333,42 @@ impl<'a> Generator<'a> {
             attributes.push(Attribute::from_token_stream(quote!(#[must_use])).unwrap());
         }
 
-        if field_type.is_vec() {
-            let function_name = format_ident!("push_{}", field_name);
+        if field_type.is_ident("Vec") {
+            function_name = Some(format_ident!("push_{}", field_name));
+            body = quote_spanned! {
+                field_type.span() =>
+                struct __AssertVec(::std::vec::Vec<()>);
+                __AssertVec(#type_name::new());
+                self.#field_name.push(value_0);
+                self
+            };
+        } else if field_type.is_ident("BTreeMap")
+            | field_type.is_ident("BTreeSet")
+            | field_type.is_ident("HashMap")
+            | field_type.is_ident("HashSet")
+        {
+            let insert_args = (0..arguments.len() - 1).map(|i| format_ident!("value_{}", i));
+            let assert_args = (0..arguments.len() - 1).map(|_| quote![()]);
 
-            let field_type_without_generic =
-                Ident::new(&field_type.path().unwrap().to_string(), field_type.span());
+            function_name = Some(format_ident!("insert_{}", field_name));
+            body = quote_spanned! {
+                field_type.span() =>
+                struct __AssertCollection(::std::collections::#type_name<#(#assert_args),*>);
+                __AssertCollection(#type_name::new());
+                self.#field_name.insert(#(#insert_args),*);
+                self
+            };
+        }
 
-            let inner_type = field_type.inner_type();
-
+        if let Some(function_name) = function_name {
             Ok(quote! {
                 #(#attributes)*
-                #visibility fn #function_name(&mut self, value: #inner_type) -> &mut Self {
-                    struct __AssertVec(::std::vec::Vec<()>);
-                    __AssertVec(#field_type_without_generic::new());
-                    self.#field_name.push(value);
-                    self
+                #visibility fn #function_name(#(#arguments),*) -> &mut Self {
+                    #body
                 }
             })
         } else {
-            Ok(quote![])
+            Ok(quote!())
         }
     }
 

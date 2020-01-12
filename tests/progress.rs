@@ -3,6 +3,14 @@ use trybuild::TestCases;
 #[test]
 fn tests() {
     let t = TestCases::new();
+
+    // collection tests
+    t.pass("tests/collections/test_vec.rs");
+    t.pass("tests/collections/test_btreemap.rs");
+    t.pass("tests/collections/test_btreeset.rs");
+    t.pass("tests/collections/test_hashmap.rs");
+    t.pass("tests/collections/test_hashset.rs");
+
     //
     t.compile_fail("tests/ui/test_tuple_struct.rs");
     t.compile_fail("tests/ui/test_unit_struct.rs");

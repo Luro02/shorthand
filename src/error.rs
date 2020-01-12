@@ -214,7 +214,7 @@ impl Error {
     {
         Self::new(ErrorKind::RedundantField {
             field: field.into(),
-            state: state.map(|s| s.into()),
+            state: state.map(Into::into),
         })
     }
 
@@ -269,7 +269,7 @@ impl Error {
         let errors = errors.into_iter().collect::<Vec<_>>();
 
         if errors.len() == 1 {
-            errors.into_iter().nth(0).unwrap()
+            errors.into_iter().next().unwrap()
         } else {
             Self::new(ErrorKind::Multiple(errors))
         }
@@ -355,7 +355,7 @@ impl Error {
         let result = self.into_vec();
 
         if result.len() == 1 {
-            result.into_iter().nth(0).unwrap()
+            result.into_iter().next().unwrap()
         } else {
             Self::multiple(result)
         }

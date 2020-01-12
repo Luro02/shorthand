@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 use syn::parse::Parser;
-use syn::{Attribute, Meta, Path, PathArguments, Type};
+use syn::{Attribute, Ident, Meta, Path, PathArguments, Type};
 
 pub(crate) trait AttributeExt {
     type Target: Sized;
@@ -23,7 +23,7 @@ impl AttributeExt for Attribute {
     fn from_token_stream(input: TokenStream) -> syn::Result<Self::Target> {
         let parser = Self::parse_outer;
 
-        Ok(parser.parse2(input)?.into_iter().nth(0).unwrap())
+        Ok(parser.parse2(input)?.into_iter().next().unwrap())
     }
 }
 
@@ -68,11 +68,13 @@ impl PathExt for Path {
 pub(crate) trait TypeExt {
     fn path(&self) -> Option<&Path>;
 
-    fn inner_type(&self) -> Option<TokenStream>;
+    fn arguments(&self) -> Option<Vec<TokenStream>>;
 
-    fn is_phantom_data(&self) -> bool;
+    fn is_ident<I: ?Sized>(&self, ident: &I) -> bool
+    where
+        Ident: PartialEq<I>;
 
-    fn is_vec(&self) -> bool;
+    fn is_phantom_data(&self) -> bool { self.is_ident("PhantomData") }
 
     fn is_primitive_copy(&self) -> bool;
 
@@ -82,6 +84,22 @@ pub(crate) trait TypeExt {
 }
 
 impl TypeExt for Type {
+    fn is_ident<I: ?Sized>(&self, ident: &I) -> bool
+    where
+        Ident: PartialEq<I>,
+    {
+        let path = match &self {
+            Self::Path(ty) => &ty.path,
+            _ => return false,
+        };
+
+        if let Some(last) = path.segments.last() {
+            last.ident == *ident
+        } else {
+            false
+        }
+    }
+
     fn path(&self) -> Option<&Path> {
         match &self {
             Self::Path(ty) => Some(&ty.path),
@@ -89,50 +107,19 @@ impl TypeExt for Type {
         }
     }
 
-    fn inner_type(&self) -> Option<TokenStream> {
+    fn arguments(&self) -> Option<Vec<TokenStream>> {
         let path = self.path()?;
 
         if let Some(last) = path.segments.last() {
             match &last.arguments {
                 PathArguments::AngleBracketed(bracketed) => {
-                    let args = &bracketed.args;
-                    return Some(quote!(#args));
+                    return Some(bracketed.args.iter().map(|v| quote!(#v)).collect())
                 }
                 _ => return None,
             }
         }
 
         None
-    }
-
-    fn is_phantom_data(&self) -> bool {
-        let path = match &self {
-            Self::Path(ty) => &ty.path,
-            _ => return false,
-        };
-
-        if let Some(last) = path.segments.last() {
-            if last.ident == "PhantomData" {
-                return true;
-            }
-        }
-
-        false
-    }
-
-    fn is_vec(&self) -> bool {
-        let path = match &self {
-            Self::Path(ty) => &ty.path,
-            _ => return false,
-        };
-
-        if let Some(last) = path.segments.last() {
-            if last.ident == "Vec" {
-                return true;
-            }
-        }
-
-        false
     }
 
     fn is_primitive_copy(&self) -> bool {
