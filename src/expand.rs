@@ -10,11 +10,10 @@ use crate::utils::{AttributeExt, PathExt, TypeExt};
 pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
     let name = &input.ident;
     let mut errors = vec![];
-    //dbg!(&input.attrs);
+
+    let mut functions: Vec<TokenStream> = vec![];
 
     let options = Options::from_derive_input(input)?;
-
-    let mut functions = vec![];
 
     match &options.data {
         Data::Struct(s) => {
@@ -22,15 +21,21 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
 
             match &s.fields {
                 Fields::Named(named) => {
-                    for field in &named.named {
-                        match generator.generate(field) {
-                            Ok(value) => {
-                                functions.push(value);
-                            }
-                            Err(e) => {
-                                errors.push(e);
-                            }
-                        }
+                    let result = named
+                        .named
+                        .iter()
+                        .map(|field| generator.generate(field))
+                        .collect::<Vec<Result<_, _>>>();
+
+                    if result.iter().any(Result::is_err) {
+                        return Err(Error::multiple(result.into_iter().filter_map(Result::err)));
+                    } else {
+                        functions.extend(
+                            result
+                                .into_iter()
+                                .filter_map(Result::ok)
+                                .collect::<Vec<_>>(),
+                        );
                     }
                 }
                 // A TupleStruct has no field names.

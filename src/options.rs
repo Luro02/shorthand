@@ -67,18 +67,6 @@ impl Options {
         // and don't have to recompile the entire codebase, just to see the next
         // error...
         let mut errors = Vec::new();
-        // This HashSet is used to see, which attributes have already been inserted.
-        // This is specifically for the case where one tries to do
-        //
-        // ```
-        // #[shorthand(enable(attribute))]
-        // #[shorthand(disable(attribute))]
-        // field: String,
-        // ```
-        //
-        // As you can see this makes no sense and therefore this library should error,
-        // if an attribute is encountered multiple times!
-        // let mut visited = HashSet::new();
 
         // iterate through all attributes
         for attr in attrs {
@@ -93,17 +81,15 @@ impl Options {
             };
 
             if Forward::is_forward(&meta) {
-                let forward = result.forward.update(&{
+                result.forward.update({
                     match syn::parse2(quote!(#attr)) {
                         Ok(val) => val,
                         Err(e) => {
                             errors.push(Error::syn(e));
-                            return Err(Error::multiple(errors));
+                            continue;
                         }
                     }
                 });
-
-                result.forward = forward;
 
                 continue;
             }

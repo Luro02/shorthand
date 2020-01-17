@@ -1,15 +1,14 @@
 use core::fmt;
 use std::collections::HashMap;
 
-use quote::quote;
-
 use syn::parse::{Parse, ParseStream};
 use syn::{Meta, NestedMeta, Token};
 
+use crate::error::Error;
 use crate::parser::{parse_enable_disable, parse_shorthand};
 use crate::utils::PathExt;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Forward {
     default_state: bool,
     fields: HashMap<syn::Path, bool>,
@@ -66,61 +65,99 @@ impl Parse for Forward {
         let (state, input) = parse_enable_disable(&input)?;
 
         for nested in input.parse_terminated::<_, Token![,]>(syn::NestedMeta::parse)? {
-            if let NestedMeta::Meta(meta) = nested {
-                if meta.path().is_ident("forward") {
-                    // enable(forward)  -> everything will be forwarded, by default
-                    // disable(forward) -> nothing will be forwarded, by default
-                    if let Meta::Path(_) = meta {
-                        return Ok(Self {
-                            default_state: state,
-                            fields: HashMap::new(),
-                        });
-                    } else if let Meta::List(list) = meta {
-                        return Ok(Self {
-                            default_state: false,
-                            fields: list
-                                .nested
-                                .into_iter()
-                                .filter_map(|v| {
-                                    // enable(forward(x))
-                                    if let NestedMeta::Meta(meta) = v {
-                                        Some((meta.path().clone(), state))
-                                    // enable(forward("x"))
+            match nested {
+                NestedMeta::Meta(meta) => {
+                    if !meta.path().is_ident("forward") {
+                        continue;
+                    }
+
+                    match meta {
+                        // enable(forward)  -> everything will be forwarded, by default
+                        // disable(forward) -> nothing will be forwarded, by default
+                        Meta::Path(_) => {
+                            return Ok(Self {
+                                default_state: state,
+                                fields: HashMap::new(),
+                            });
+                        }
+                        // #[shorthand(enable(forward(x, y, z)))]
+                        Meta::List(list) => {
+                            return Ok(Self {
+                                default_state: false,
+                                fields: {
+                                    let iterator = list
+                                        .nested
+                                        .into_iter()
+                                        .map(|v| {
+                                            match v {
+                                                // enable(forward(x))
+                                                NestedMeta::Meta(meta) => {
+                                                    if let Meta::Path(p) = meta {
+                                                        Ok((p, state))
+                                                    } else {
+                                                        Err(Error::unexpected_meta(&meta)
+                                                            .with_alts(&["Path"]))
+                                                    }
+                                                }
+                                                // enable(forward("x"))
+                                                NestedMeta::Lit(lit) => {
+                                                    Err(Error::unexpected_lit(&lit))
+                                                }
+                                            }
+                                        })
+                                        .collect::<Vec<Result<_, _>>>();
+
+                                    if iterator.iter().any(Result::is_err) {
+                                        Err::<_, syn::Error>(
+                                            Error::multiple(
+                                                iterator.into_iter().filter_map(Result::err),
+                                            )
+                                            .into(),
+                                        )
                                     } else {
-                                        // TODO: I think this should error
-                                        //       (Literals are unexpected)
-                                        None
+                                        Ok(iterator.into_iter().filter_map(Result::ok).collect())
                                     }
-                                })
-                                .collect(),
-                        });
-                    } else {
-                        unimplemented!("TODO: Handle this error case");
+                                }?,
+                            });
+                        }
+                        // #[shorthand(enable(forward(x = "")))]
+                        Meta::NameValue(_) => {
+                            return Err(Error::unexpected_meta(&meta)
+                                .with_alts(&["Path", "List"])
+                                .into());
+                        }
                     }
                 }
-            } else {
-                // panic or error, I don't know
+                // #[shorthand(enable(""))]
+                NestedMeta::Lit(lit) => {
+                    return Err(Error::unexpected_lit(&lit).into());
+                }
             }
         }
 
-        //dbg!(input);
-
-        unimplemented!("Nothing inside the attribute.");
+        // this is unreachable, because it is checked with Forward::is_forward, that the
+        // input is a valid `Forward` attribute, before it is passed to this
+        // function via `syn::parse`
+        unreachable!("failed to parse `TokenStream`")
     }
 }
 
 impl Forward {
+    // parses something like this:
+    //
+    // #[shorthand(enable(forward, x))]
+    // #[shorthand(disable(forward, x))]
     pub fn is_forward(meta: &Meta) -> bool {
-        // #[shorthand(enable(forward, x))]
-        // #[shorthand(disable(forward, x))]
-        // enable(forward, x)
-        // disable(forward, x)
-
-        // this should be good enough (parsing the entire TokenStream is overkill)
-        for part in quote!(#meta).to_string().replace(')', "").split('(') {
-            for attr in part.split(',') {
-                if attr.trim() == "forward" {
-                    return true;
+        if let Meta::List(list) = meta {
+            for part in &list.nested {
+                if let NestedMeta::Meta(meta) = part {
+                    if let Meta::List(list) = meta {
+                        for part in &list.nested {
+                            if let NestedMeta::Meta(meta) = part {
+                                return meta.path().is_ident("forward");
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -128,12 +165,12 @@ impl Forward {
         false
     }
 
-    pub fn update(mut self, other: &Self) -> Self {
-        for (key, value) in &other.fields {
-            if let Some(v) = self.fields.get_mut(key) {
-                *v = *value;
+    pub fn update(&mut self, other: Self) -> &mut Self {
+        for (key, value) in other.fields {
+            if let Some(v) = self.fields.get_mut(&key) {
+                *v = value;
             } else {
-                self.fields.insert(key.clone(), *value);
+                self.fields.insert(key, value);
             }
         }
 
@@ -157,11 +194,49 @@ impl Forward {
 mod tests {
     use super::*;
 
+    use crate::utils::AttributeExt;
+
     #[test]
     fn parse_forward() {
-        // TODO: discard this kind of attributes, only absolute ones are supported!
-        // #[shorthand(enable(forward))] instead of just enable(forward)
-        let _forward: Forward = syn::parse_str("#[shorthand(enable(forward))]").unwrap();
-        let _forward: Forward = syn::parse_str("#[shorthand(enable(forward(x, y, z)))]").unwrap();
+        let _: Forward = syn::parse_str("#[shorthand(enable(forward))]").unwrap();
+        let _: Forward = syn::parse_str("#[shorthand(disable(forward))]").unwrap();
+        let _: Forward = syn::parse_str("#[shorthand(enable(forward(x, y, z)))]").unwrap();
+        let _: Forward = syn::parse_str("#[shorthand(disable(forward(x, y, z)))]").unwrap();
+    }
+
+    #[test]
+    fn is_forward() {
+        let valid_attributes = [
+            "#[shorthand(enable(forward))]",
+            "#[shorthand(disable(forward))]",
+            "#[shorthand(enable(forward(x, y, z)))]",
+            "#[shorthand(disable(forward(x, y, z)))]",
+        ];
+
+        for valid in &valid_attributes {
+            assert!(Forward::is_forward(
+                &syn::Attribute::from_str(valid)
+                    .unwrap()
+                    .parse_meta()
+                    .unwrap()
+            ));
+        }
+
+        let invalid_attributes = [
+            "#[shorthand(enable(forward_))]",
+            "#[shorthand(disable(_forward))]",
+            "#[shorthand(enable(xaforward(x, y, z)))]",
+            "#[shorthand(forward(x, y, z))]",
+            "#[shorthand(forward_everything)]",
+        ];
+
+        for invalid in &invalid_attributes {
+            assert!(!Forward::is_forward(
+                &syn::Attribute::from_str(invalid)
+                    .unwrap()
+                    .parse_meta()
+                    .unwrap()
+            ));
+        }
     }
 }

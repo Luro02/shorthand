@@ -110,7 +110,7 @@ impl AttributesBuilder {
                     // Error for `#[shorthand(enable("option_as_ref"))]`
                     NestedMeta::Lit(lit) => {
                         self.errors
-                            .push(Error::unexpected_lit_type(lit).with_span(nested_item));
+                            .push(Error::unexpected_lit(lit).with_span(nested_item));
                     }
                 }
             }
