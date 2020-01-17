@@ -46,66 +46,7 @@ enum ErrorKind {
 }
 
 impl PartialEq for ErrorKind {
-    fn eq(&self, other: &Self) -> bool {
-        match (&self, &other) {
-            (Self::Custom(s), Self::Custom(o)) | (Self::MissingField(s), Self::MissingField(o)) => {
-                s == o
-            }
-            (Self::SynError(s), Self::SynError(o)) => s.to_string() == o.to_string(),
-            (Self::Multiple(s), Self::Multiple(o)) => s == o,
-            (
-                Self::UnknownField {
-                    found: s_found,
-                    expected: s_expected,
-                },
-                Self::UnknownField {
-                    found: o_found,
-                    expected: o_expected,
-                },
-            ) => s_found == o_found && s_expected == o_expected,
-            (
-                Self::UnexpectedType {
-                    found: s_found,
-                    expected: s_expected,
-                },
-                Self::UnexpectedType {
-                    found: o_found,
-                    expected: o_expected,
-                },
-            ) => s_found == o_found && s_expected == o_expected,
-            (
-                Self::UnexpectedMeta {
-                    format: s_format,
-                    expected: s_expected,
-                },
-                Self::UnexpectedMeta {
-                    format: o_format,
-                    expected: o_expected,
-                },
-            ) => s_format == o_format && s_expected == o_expected,
-            (
-                Self::UnexpectedField {
-                    found: s_found,
-                    expected: s_expected,
-                },
-                Self::UnexpectedField {
-                    found: o_found,
-                    expected: o_expected,
-                },
-            ) => s_found == o_found && s_expected == o_expected,
-            (
-                Self::RedundantField {
-                    field: s_field,
-                    state: s_state,
-                },
-                Self::RedundantField {
-                    field: o_field,
-                    state: o_state,
-                },
-            ) => s_field == o_field && s_state == o_state,
-            _ => false,
-        }
-    }
+    fn eq(&self, other: &Self) -> bool { self.to_string() == other.to_string() }
 }
 
 impl fmt::Display for ErrorKind {
