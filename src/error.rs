@@ -30,7 +30,6 @@ enum ErrorKind {
         found: String,
         expected: Option<String>,
     },
-    MissingField(String),
     UnexpectedMeta {
         format: &'static str,
         expected: Vec<String>,
@@ -72,16 +71,8 @@ impl fmt::Display for ErrorKind {
                     unreachable!("ErrorKind::Multiple is empty!");
                 }
             }
-            Self::UnknownField { found, .. } => {
-                write!(f, "unknown field `{}`", found)
-                // write!(
-                //     f,
-                //     ". Did you mean `{}`",
-                //     expected.get(0).unwrap_or(&"".to_string())
-                // )
-            }
+            Self::UnknownField { found, .. } => write!(f, "unknown field `{}`", found),
             Self::UnexpectedType { found, .. } => write!(f, "unexpected literal type `{}`", found),
-            Self::MissingField(field) => write!(f, "missing field `{}`", field),
             Self::UnexpectedMeta { format, expected } => {
                 write!(f, "unexpected meta-item format `{}`", format)?;
 
@@ -161,10 +152,6 @@ impl Error {
             field: field.into(),
             state: state.map(Into::into),
         })
-    }
-
-    pub fn missing_field(value: &str) -> Self {
-        Self::new(ErrorKind::MissingField(value.to_string()))
     }
 
     pub fn unexpected_type<T: ToString>(value: &T) -> Self {
@@ -335,15 +322,8 @@ mod tests {
         );
 
         assert_eq!(
-            Error::multiple(vec![
-                Error::unknown_field("zero"),
-                Error::missing_field("two")
-            ])
-            .flatten(),
-            Error::multiple(vec![
-                Error::unknown_field("zero"),
-                Error::missing_field("two")
-            ])
+            Error::multiple(vec![Error::unknown_field("zero"), Error::custom("two")]).flatten(),
+            Error::multiple(vec![Error::unknown_field("zero"), Error::custom("two")])
         );
 
         assert_eq!(
@@ -366,18 +346,6 @@ mod tests {
                 Error::unknown_field("hello"),
                 Error::unknown_field("zero"),
             ])
-        );
-    }
-
-    #[test]
-    #[ignore]
-    fn test_error_kind_alts() {
-        assert_eq!(
-            Error::unknown_field("hello")
-                .with_alts(vec!["hallo", "bonjour", "salut", "konichiwa"])
-                .into_token_stream()
-                .to_string(),
-            "".to_string()
         );
     }
 }
