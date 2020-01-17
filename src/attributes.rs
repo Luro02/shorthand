@@ -1,21 +1,21 @@
 use std::collections::HashMap;
 
 use from_map::FromMap;
-use proc_macro2::Span;
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Meta, NestedMeta};
 
 use crate::error::Error;
 use crate::utils::MetaExt;
+use crate::utils::Spanned;
 
 #[derive(Default)]
 pub(crate) struct AttributesBuilder {
-    fields: HashMap<&'static str, (bool, Span)>,
+    fields: HashMap<Spanned<&'static str>, bool>,
     errors: Vec<Error>,
 }
 
 /*
-What should trigger an error (redundant attributes):
+What should trigger redundant error:
 - enabling an attribute, that is already enabled
 - disabling an attribute, that is already disabled
 - enabling/disabling an attribute multiple times
@@ -28,7 +28,7 @@ impl AttributesBuilder {
         "const_fn",
         "primitive_copy",
         "inline",
-        "must_use", // TODO: this should only work on getter and mut getter
+        "must_use",
         "copy",
         "get",
         "set",
@@ -90,7 +90,10 @@ impl AttributesBuilder {
                         if let Some(field) = insert_field {
                             // error for this invariant:
                             // #[shorthand(enable(const_fn, const_fn))]
-                            if self.fields.insert(field, (state, inner.span())).is_some()
+                            if self
+                                .fields
+                                .insert(Spanned::new(field).with_span(&inner.span()), state)
+                                .is_some()
                                 && !(field == "forward_attributes" || field == "forward_everything")
                             {
                                 // error if insert was already called -> duplicate field
@@ -115,7 +118,7 @@ impl AttributesBuilder {
                 }
             }
         } else {
-            // TODO: error
+            self.errors.push(Error::unexpected_meta(item));
         }
 
         self
@@ -123,12 +126,15 @@ impl AttributesBuilder {
 
     pub fn build_with(mut self, mut result: Attributes) -> Result<Attributes, Error> {
         // loop through all fields of result:
-        for (k, v) in result.as_map() {
-            if k == "forward_attributes" || k == "forward_everything" {
+        for (field, v) in result.as_map() {
+            // TODO: this is temporary and should be removed as soon as those attributes
+            //       are replaced by "forward"
+            if field == "forward_attributes" || field == "forward_everything" {
                 continue;
             }
-            if let Some(value) = self.fields.get(&k) {
-                if v == value.0 {
+
+            if let Some((field, value)) = self.fields.get_key_value(&Spanned::new(field)) {
+                if v == *value {
                     let state = {
                         if v {
                             "enabled"
@@ -137,13 +143,21 @@ impl AttributesBuilder {
                         }
                     };
 
-                    self.errors
-                        .push(Error::redundant_field(k, Some(state)).with_span(&value.1));
+                    self.errors.push(
+                        Error::redundant_field(*field.inner(), Some(state))
+                            .with_span(&field.span()),
+                    );
                 }
             }
         }
 
-        result.with_map(&self.fields.into_iter().map(|(k, v)| (k, v.0)).collect());
+        result.with_map(
+            &self
+                .fields
+                .into_iter()
+                .map(|(k, v)| (k.into_inner(), v))
+                .collect(),
+        );
 
         if !self.errors.is_empty() {
             return Err(Error::multiple(self.errors));

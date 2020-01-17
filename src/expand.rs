@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, quote_spanned};
-use syn::spanned::Spanned;
+use syn::spanned::Spanned as _;
 use syn::{Attribute, Data, DeriveInput, Field, Fields, Ident, Type};
 
 use crate::error::Error;
