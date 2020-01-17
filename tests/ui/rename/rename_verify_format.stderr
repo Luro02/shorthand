@@ -1,35 +1,35 @@
 error: More than one `{}` in format string.
- --> $DIR/test_rename_verify_format.rs:5:33
+ --> $DIR/rename_verify_format.rs:5:33
   |
 5 |     #[shorthand(rename(format = "abc_{}_{}"))]
   |                                 ^^^^^^^^^^^
 
 error: Missing `{}` in format string.
- --> $DIR/test_rename_verify_format.rs:7:33
+ --> $DIR/rename_verify_format.rs:7:33
   |
 7 |     #[shorthand(rename(format = "def"))]
   |                                 ^^^^^
 
 error: More than one `{}` in format string.
- --> $DIR/test_rename_verify_format.rs:9:30
+ --> $DIR/rename_verify_format.rs:9:30
   |
 9 |     #[shorthand(rename(set = "ghi_{}_{}"))]
   |                              ^^^^^^^^^^^
 
 error: Missing `{}` in format string.
-  --> $DIR/test_rename_verify_format.rs:11:30
+  --> $DIR/rename_verify_format.rs:11:30
    |
 11 |     #[shorthand(rename(set = "jkl"))]
    |                              ^^^^^
 
 error: More than one `{}` in format string.
-  --> $DIR/test_rename_verify_format.rs:13:30
+  --> $DIR/rename_verify_format.rs:13:30
    |
 13 |     #[shorthand(rename(get = "mno_{}_{}"))]
    |                              ^^^^^^^^^^^
 
 error: Missing `{}` in format string.
-  --> $DIR/test_rename_verify_format.rs:15:30
+  --> $DIR/rename_verify_format.rs:15:30
    |
 15 |     #[shorthand(rename(get = "pqr"))]
    |                              ^^^^^

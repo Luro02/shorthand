@@ -1,5 +1,5 @@
 error: unexpected literal type `string`
- --> $DIR/test_unexpected_lit.rs:4:20
+ --> $DIR/unexpected_lit.rs:4:20
   |
 4 | #[shorthand(enable("string"))]
   |                    ^^^^^^^^

@@ -1,0 +1,29 @@
+error: unexpected literal type `string`
+  --> $DIR/parse.rs:11:32
+   |
+11 |     #[shorthand(enable(forward("")))] // invalid
+   |                                ^^
+
+error: unexpected meta-item format `NameValue`, expected `Path` or `List`
+  --> $DIR/parse.rs:13:24
+   |
+13 |     #[shorthand(enable(forward = ""))] // invalid
+   |                        ^^^^^^^^^^^^
+
+error: unexpected meta-item format `NameValue`, expected `Path`
+  --> $DIR/parse.rs:15:32
+   |
+15 |     #[shorthand(enable(forward(x = "")))] // invalid
+   |                                ^^^^^^
+
+error: unexpected literal type `string`
+  --> $DIR/parse.rs:17:24
+   |
+17 |     #[shorthand(enable(""))] // invalid
+   |                        ^^
+
+error: unexpected meta-item format `List`, expected `Path`
+  --> $DIR/parse.rs:19:32
+   |
+19 |     #[shorthand(enable(forward(x(y))))] // invalid
+   |                                ^^^^

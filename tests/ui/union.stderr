@@ -1,5 +1,5 @@
 error: union structs are not supported.
- --> $DIR/test_union.rs:4:1
+ --> $DIR/union.rs:4:1
   |
 4 | / #[repr(C)]
 5 | | union ExampleUnion {

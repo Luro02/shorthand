@@ -1,5 +1,5 @@
 error: expected literal or `inherit`
- --> $DIR/test_unknown_visibility.rs:4:24
+ --> $DIR/unknown_visibility.rs:4:24
   |
 4 | #[shorthand(visibility(garbage))]
   |                        ^^^^^^^

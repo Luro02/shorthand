@@ -1,5 +1,5 @@
 error: unexpected meta-item format `Path`, expected `List`
- --> $DIR/test_rename_path.rs:5:17
+ --> $DIR/rename_path.rs:5:17
   |
 5 |     #[shorthand(rename)]
   |                 ^^^^^^

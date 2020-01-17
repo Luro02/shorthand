@@ -1,5 +1,5 @@
 error: enum are not supported.
- --> $DIR/test_enum.rs:4:1
+ --> $DIR/enum.rs:4:1
   |
 4 | / enum ExampleEnum {
 5 | |     First,

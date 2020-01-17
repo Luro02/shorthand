@@ -1,5 +1,5 @@
 error: unexpected field `rename`
- --> $DIR/test_rename_enable.rs:4:20
+ --> $DIR/rename_enable.rs:4:20
   |
 4 | #[shorthand(enable(rename))]
   |                    ^^^^^^

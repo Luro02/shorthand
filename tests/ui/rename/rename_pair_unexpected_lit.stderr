@@ -1,5 +1,5 @@
 error: unexpected literal type `byte string`
- --> $DIR/test_rename_pair_unexpected_lit.rs:5:33
+ --> $DIR/rename_pair_unexpected_lit.rs:5:33
   |
 5 |     #[shorthand(rename(format = b"binary"))]
   |                                 ^^^^^^^^^

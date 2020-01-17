@@ -1,5 +1,5 @@
 error: unexpected meta-item format `NameValue`, expected `List`
- --> $DIR/test_rename_meta_name_value.rs:5:17
+ --> $DIR/rename_meta_name_value.rs:5:17
   |
 5 |     #[shorthand(rename = "example")]
   |                 ^^^^^^^^^^^^^^^^^^

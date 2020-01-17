@@ -1,11 +1,11 @@
 error: redundant field `option_as_ref`, which is already enabled
- --> $DIR/test_redundant_disable_enable.rs:4:20
+ --> $DIR/redundant_disable_enable.rs:4:20
   |
 4 | #[shorthand(enable(option_as_ref, const_fn))]
   |                    ^^^^^^^^^^^^^
 
 error: redundant field `const_fn`, which is already disabled
- --> $DIR/test_redundant_disable_enable.rs:5:36
+ --> $DIR/redundant_disable_enable.rs:5:36
   |
 5 | #[shorthand(disable(option_as_ref, const_fn))]
   |                                    ^^^^^^^^
