@@ -43,6 +43,9 @@ enum ErrorKind {
         field: Cow<'static, str>,
         state: Option<Cow<'static, str>>,
     },
+    DuplicateField {
+        field: Cow<'static, str>,
+    },
 }
 
 impl PartialEq for ErrorKind {
@@ -108,6 +111,7 @@ impl fmt::Display for ErrorKind {
 
                 Ok(())
             }
+            Self::DuplicateField { field } => write!(f, "duplicate field `{}`", field),
         }
     }
 }
@@ -116,10 +120,6 @@ impl std::error::Error for Error {}
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result { write!(f, "{}", self.kind) }
-}
-
-impl From<syn::Error> for Error {
-    fn from(value: syn::Error) -> Self { Self::syn(value) }
 }
 
 impl Error {
@@ -143,9 +143,13 @@ impl Error {
         })
     }
 
-    pub fn duplicate_field(value: &str) -> Self {
-        // TODO: temporary solution!
-        Self::new(ErrorKind::Custom(format!("duplicate field `{}`", value)))
+    pub fn duplicate_field<T>(value: T) -> Self
+    where
+        T: Into<Cow<'static, str>>,
+    {
+        Self::new(ErrorKind::DuplicateField {
+            field: value.into(),
+        })
     }
 
     pub fn redundant_field<K, T>(field: K, state: Option<T>) -> Self
@@ -312,6 +316,10 @@ impl IntoIterator for Error {
 
 impl Into<syn::Error> for Error {
     fn into(self) -> syn::Error { self.into_syn_error() }
+}
+
+impl From<syn::Error> for Error {
+    fn from(value: syn::Error) -> Self { Self::syn(value) }
 }
 
 #[cfg(test)]
