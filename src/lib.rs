@@ -1,3 +1,4 @@
+#![forbid(unsafe_code)]
 #![doc(test(attr(deny(unused_mut))))]
 //! # shorthand
 //! [`shorthand`](https://dictionary.cambridge.org/de/worterbuch/englisch/shorthand) is defined as
