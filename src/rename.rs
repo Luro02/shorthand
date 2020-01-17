@@ -21,19 +21,9 @@ fn parse_format(lit: &Lit) -> syn::Result<String> {
     if let Lit::Str(lit_str) = lit {
         // check for invariants (too many `{}` or missing `{}`)
         match lit_str.value().matches("{}").count() {
-            0 => {
-                Err(syn::Error::new_spanned(
-                    lit_str,
-                    "Missing `{}` in format string.",
-                ))
-            }
+            0 => Err(syn::Error::new_spanned(lit_str, "missing `{}`")),
             1 => Ok(lit_str.value()),
-            _ => {
-                Err(syn::Error::new_spanned(
-                    lit_str,
-                    "More than one `{}` in format string.",
-                ))
-            }
+            _ => Err(syn::Error::new_spanned(lit_str, "more than one `{}`")),
         }
     } else {
         Err(Error::unexpected_lit(lit).with_span(&lit).into())
