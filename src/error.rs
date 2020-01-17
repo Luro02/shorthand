@@ -86,11 +86,11 @@ impl fmt::Display for ErrorKind {
                     write!(f, ", expected ")?;
 
                     if expected.len() > 1 {
-                        write!(f, "[`{}`", first_value)?;
-                        for value in expected.iter().skip(1) {
+                        write!(f, "`{}`", first_value)?;
+                        for value in &expected[1..expected.len() - 1] {
                             write!(f, ", `{}`", value)?;
                         }
-                        write!(f, "]")?;
+                        write!(f, " or `{}`", expected.last().unwrap())?;
                     } else {
                         write!(f, "`{}`", first_value)?;
                     }
