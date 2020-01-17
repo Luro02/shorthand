@@ -186,7 +186,7 @@ impl Error {
         .with_span(&value)
     }
 
-    pub fn unexpected_lit_type(lit: &syn::Lit) -> Self {
+    pub fn unexpected_lit(lit: &syn::Lit) -> Self {
         let found = {
             match lit {
                 Lit::Str(_) => "string",

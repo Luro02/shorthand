@@ -36,7 +36,7 @@ fn parse_format(lit: &Lit) -> syn::Result<String> {
             }
         }
     } else {
-        Err(Error::unexpected_lit_type(lit).with_span(&lit).into())
+        Err(Error::unexpected_lit(lit).with_span(&lit).into())
     }
 }
 
