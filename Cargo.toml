@@ -23,6 +23,7 @@ from_map = { path = "from_map" }
 [dev-dependencies]
 trybuild = "1.0"
 pretty_assertions = "0.6"
+version-sync = "0.8"
 
 [[test]]
 name = "tests"

@@ -1,3 +1,4 @@
+#![doc(html_root_url = "https://docs.rs/shorthand/0.1.0")]
 #![forbid(unsafe_code)]
 #![doc(test(attr(deny(unused_mut))))]
 //! # shorthand
