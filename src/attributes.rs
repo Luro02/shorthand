@@ -23,7 +23,7 @@ What should trigger redundant error:
 */
 
 impl AttributesBuilder {
-    const FIELDS: [&'static str; 18] = [
+    const FIELDS: [&'static str; 19] = [
         "option_as_ref",
         "const_fn",
         "primitive_copy",
@@ -42,6 +42,7 @@ impl AttributesBuilder {
         "try_into",
         "get_mut",
         "collection_magic",
+        "strip_option",
     ];
 
     pub fn push_meta(&mut self, ident: &str, item: &Meta) -> &mut Self {
@@ -192,6 +193,7 @@ pub(crate) struct Attributes {
     pub try_into: bool,
     pub get_mut: bool,
     pub collection_magic: bool,
+    pub strip_option: bool,
 }
 
 impl Attributes {
@@ -227,6 +229,7 @@ impl Default for Attributes {
             try_into: false,
             get_mut: false,
             collection_magic: false,
+            strip_option: false,
         }
     }
 }

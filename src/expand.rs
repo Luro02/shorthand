@@ -212,18 +212,76 @@ impl<'a> Generator<'a> {
 
         let body = {
             if options.attributes.into {
-                arguments.push(quote![value: VALUE]);
-                generics.push(quote![VALUE: ::core::convert::Into<#field_type>]);
-                quote![
+                let mut argument = quote! { value: VALUE };
+
+                let mut result = quote! {
                     self.#field_name = value.into();
                     self
-                ]
+                };
+
+                let mut bound = quote! { VALUE: ::std::convert::Into<#field_type> };
+
+                if field_type.is_ident("Option") {
+                    if let Some(arg) = field_type
+                        .arguments()
+                        .into_iter()
+                        .find_map(|s| s.into_iter().last())
+                    {
+                        if options.attributes.strip_option {
+                            bound = quote! { VALUE: ::std::convert::Into<#arg> };
+
+                            result = quote! {
+                                self.#field_name = Some(value.into());
+                                self
+                            };
+                        } else {
+                            bound = quote! { VALUE: ::std::convert::Into<#arg> };
+                            argument = quote! { value: ::std::option::Option<VALUE> };
+                            result = quote! {
+                                self.#field_name = value.map(|v| v.into());
+                                self
+                            };
+                        }
+                    }
+                }
+
+                arguments.push(argument);
+                generics.push(bound);
+                result
             } else {
-                arguments.push(quote![value: #field_type]);
-                quote![
+                let mut result = quote! {
                     self.#field_name = value;
                     self
-                ]
+                };
+
+                let mut argument = quote! { value: #field_type };
+
+                if field_type.is_ident("Option") {
+                    if let Some(arg) = field_type
+                        .arguments()
+                        .into_iter()
+                        .find_map(|s| s.into_iter().last())
+                    {
+                        if options.attributes.strip_option {
+                            argument = quote! { value: #arg };
+
+                            result = quote! {
+                                self.#field_name = Some(value);
+                                self
+                            };
+                        } else {
+                            argument = quote! { value: Option<#arg> };
+
+                            result = quote! {
+                                self.#field_name = value.map(|v| v.into());
+                                self
+                            };
+                        }
+                    }
+                }
+
+                arguments.push(argument);
+                result
             }
         };
 
@@ -260,23 +318,57 @@ impl<'a> Generator<'a> {
         };
 
         let mut attributes: Vec<Attribute> = options.attrs.clone();
+        let mut argument = quote! { value: VALUE };
 
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
         }
         let visibility = options.visibility();
 
+        let mut body = quote! {
+            self.#field_name = value.try_into()?;
+            Ok(self)
+        };
+
+        let mut bound = quote! {
+            VALUE: ::std::convert::TryInto<#field_type>
+        };
+
+        if field_type.is_ident("Option") {
+            if let Some(arg) = field_type
+                .arguments()
+                .into_iter()
+                .find_map(|s| s.into_iter().last())
+            {
+                if options.attributes.strip_option {
+                    body = quote! {
+                        self.#field_name = Some(value.try_into()?);
+                        Ok(self)
+                    };
+                } else {
+                    argument = quote! { value: ::std::option::Option<VALUE> };
+                    body = quote! {
+                        self.#field_name = value.map(|v| v.try_into()).transpose()?;
+                        Ok(self)
+                    };
+                }
+
+                bound = quote! {
+                    VALUE: ::std::convert::TryInto<#arg>
+                };
+            }
+        }
+
         Ok(quote! {
             #(#attributes)*
             #visibility fn #function_name<VALUE>(
                 &mut self,
-                value: VALUE
+                #argument
             ) -> Result<&mut Self, VALUE::Error>
             where
-                VALUE: ::core::convert::TryInto<#field_type>
+                #bound
             {
-                self.#field_name = value.try_into()?;
-                Ok(self)
+                #body
             }
         })
     }

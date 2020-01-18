@@ -16,6 +16,7 @@ impl<T: PartialEq> PartialEq for Spanned<T> {
     fn eq(&self, other: &Self) -> bool { self.inner == other.inner }
 }
 
+/// Allows to compare for example a `Spanned<bool>` with a `bool`
 impl<T: PartialEq> PartialEq<T> for Spanned<T> {
     fn eq(&self, other: &T) -> bool { &self.inner == other }
 }
@@ -49,11 +50,23 @@ impl<T> Spanned<T> {
     pub const fn new(inner: T) -> Self { Self { inner, span: None } }
 
     pub fn with_span<S: ::syn::spanned::Spanned>(mut self, span: &S) -> Self {
-        self.span = Some(span.span());
+        if self.span.is_none() {
+            self.span = Some(span.span());
+        }
+
         self
     }
 
     pub const fn inner(&self) -> &T { &self.inner }
+
+    pub fn inner_mut(&mut self) -> &mut T { &mut self.inner }
+
+    pub fn map<U, F: FnOnce(T) -> U>(self, f: F) -> Spanned<U> {
+        Spanned {
+            inner: f(self.inner),
+            span: self.span,
+        }
+    }
 
     pub fn into_inner(self) -> T { self.inner }
 }
