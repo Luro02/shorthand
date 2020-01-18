@@ -121,7 +121,7 @@ impl<'a> Generator<'a> {
 
         let mut attributes: Vec<Attribute> = options.attrs.clone();
         let arguments = vec![quote![&self]];
-        let visibility = options.visibility();
+        let visibility = &options.visibility;
         let mut assertions = vec![];
 
         // add attributes to the function
@@ -208,7 +208,7 @@ impl<'a> Generator<'a> {
         let mut generics = vec![];
         let mut arguments = vec![quote![&mut self]];
         let return_type = quote![&mut Self];
-        let visibility = options.visibility();
+        let visibility = &options.visibility;
 
         let body = {
             if options.attributes.into {
@@ -323,7 +323,7 @@ impl<'a> Generator<'a> {
         if options.attributes.inline {
             attributes.push(Attribute::from_token_stream(quote!(#[inline(always)])).unwrap());
         }
-        let visibility = options.visibility();
+        let visibility = &options.visibility;
 
         let mut body = quote! {
             self.#field_name = value.try_into()?;
@@ -396,7 +396,7 @@ impl<'a> Generator<'a> {
             attributes.push(Attribute::from_token_stream(quote!(#[must_use])).unwrap());
         }
 
-        let visibility = options.visibility();
+        let visibility = &options.visibility;
 
         Ok(quote! {
             #(#attributes)*
@@ -411,7 +411,7 @@ impl<'a> Generator<'a> {
         field_name: &Ident,
         field_type: &Type,
     ) -> Result<TokenStream, Error> {
-        let visibility = options.visibility();
+        let visibility = &options.visibility;
         let mut attributes = options.attrs.clone();
 
         let type_name = Ident::new(&field_type.path().unwrap().to_string(), field_type.span());

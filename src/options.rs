@@ -148,8 +148,6 @@ impl Options {
         let result = self.clone();
         Ok(Self::parse_attributes(result, attrs)?)
     }
-
-    pub const fn visibility(&self) -> &Visibility { &self.visibility }
 }
 
 impl Options {
