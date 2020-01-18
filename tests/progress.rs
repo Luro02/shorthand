@@ -29,6 +29,7 @@ fn tests() {
     t.compile_fail("tests/ui/generic_value_try_into.rs");
     t.compile_fail("tests/ui/generic_value_into.rs");
     t.compile_fail("tests/ui/shorthand.rs");
+    t.compile_fail("tests/ui/clone.rs");
 
     // attribute errors:
     t.compile_fail("tests/ui/not_copy.rs");

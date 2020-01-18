@@ -148,6 +148,12 @@ impl<'a> Generator<'a> {
                     field_type.to_as_ref().unwrap(),
                     quote![self.#field_name.as_ref()],
                 )
+            } else if options.attributes.clone {
+                assertions.push(quote_spanned! {
+                    field_type.span() =>
+                    struct _AssertClone where #field_type: ::std::clone::Clone;
+                });
+                (quote![#field_type], quote! { self.#field_name.clone() })
             } else {
                 (quote![&#field_type], quote![&self.#field_name])
             }
@@ -167,7 +173,7 @@ impl<'a> Generator<'a> {
             // it acts as a check for wether a type implements Copy or not.
             assertions.push(quote_spanned! {
                 field_type.span() =>
-                struct _AssertCopy where #field_type: Copy;
+                struct _AssertCopy where #field_type: ::std::marker::Copy;
             });
         }
 
