@@ -1,0 +1,11 @@
+error: unexpected meta-item format `Path`, expected `List`
+ --> $DIR/shorthand.rs:4:3
+  |
+4 | #[shorthand]
+  |   ^^^^^^^^^
+
+error: unexpected meta-item format `NameValue`, expected `List`
+  --> $DIR/shorthand.rs:10:3
+   |
+10 | #[shorthand = ""]
+   |   ^^^^^^^^^^^^^^

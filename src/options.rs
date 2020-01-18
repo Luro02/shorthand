@@ -123,7 +123,7 @@ impl Options {
                         }
                     }
                 } else {
-                    // TODO: error?
+                    errors.push(Error::unexpected_meta(&meta).with_alts(&["List"]));
                     continue;
                 }
             } else {
