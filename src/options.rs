@@ -8,40 +8,6 @@ use crate::rename::Rename;
 use crate::utils::{MetaExt, PathExt};
 use crate::visibility::FieldVisibility;
 
-/*
-Attributes, that should be supported:
-
-# done:
-- option_as_ref
-- copy
-- const_fn
-- ignore_phantomdata
-- get
-- set
-- skip
-- rename
-- rename("get_{}_value")
-- into
-- primitive_copy
-- ignore_underscore (ignores fields with an ident, that starts with an underscore)
-- get_mut
-- try_into
-
-# todo:
-// TODO: serde seems to have something similar (maybe use this as reference?)
-- custom(generic = "T: Read", return = "K", func = "path::to::function")
-- bounds(with_func = "path::to::function") // see serde for example
-- collection_magic
-- collection_insert
-- collection_push
-- cow
-- as_ref
-- use_naming_convention (getter will return `as_...`), functions that return bool will be `is_...`
-
-# How to specify attributes:
-#[shorthand(visibility(pub), enable(option_as_ref, const_fn, copy_primitive), disable(cow, set))]
-*/
-
 #[derive(Debug, Clone)]
 pub(crate) struct Options {
     pub ident: Ident,
@@ -105,7 +71,7 @@ impl Options {
 
                             // All known fields are in `Self::FIELDS`, this
                             // makes it easier to add new fields.
-                            // TOOD: this loop makes little to no sense right now!
+                            // TODO: remove the loop?
                             for field in &Self::FIELDS {
                                 if &name == field {
                                     if field == &"enable" || field == &"disable" {
@@ -139,7 +105,7 @@ impl Options {
                                             }
                                         }
                                     } else {
-                                        unreachable!(format!("Unhandled attribute: {}", field));
+                                        unreachable!(format!("unhandled field: {}", field));
                                     }
                                     unknown = false;
                                     break;

@@ -68,7 +68,6 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
             .to_string()
             .contains("VALUE")
     {
-        // TODO: test error
         return Err(
             Error::custom("a generic called `VALUE` is not supported, please rename it.")
                 .with_span(&options.generics),

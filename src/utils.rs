@@ -141,8 +141,6 @@ pub(crate) trait TypeExt {
     where
         Ident: PartialEq<I>;
 
-    fn is_phantom_data(&self) -> bool { self.is_ident("PhantomData") }
-
     fn is_primitive_copy(&self) -> bool;
 
     fn is_option(&self) -> bool;
