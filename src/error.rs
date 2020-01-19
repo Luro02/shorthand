@@ -71,6 +71,17 @@ impl Error {
         Self::new(ErrorKind::Custom(message.to_string()))
     }
 
+    pub fn syn(value: syn::Error) -> Self {
+        let number = (&value).into_iter().count();
+        let span = value.span();
+
+        if number == 1 {
+            Self::new(ErrorKind::SynError(value)).with_span(&span)
+        } else {
+            Self::multiple(value.into_iter().map(Self::syn))
+        }
+    }
+
     pub fn unknown_field(value: &str) -> Self {
         Self::new(ErrorKind::UnknownField {
             found: value.to_string(),
@@ -149,12 +160,17 @@ impl Error {
     where
         T: IntoIterator<Item = Self>,
     {
-        let errors = errors.into_iter().collect::<Vec<_>>();
+        let mut errors = errors.into_iter().peekable();
+        let first_element = errors.next().expect("errors should not be empty!");
 
-        if errors.len() == 1 {
-            errors.into_iter().next().unwrap()
+        if errors.peek().is_none() {
+            first_element
         } else {
-            Self::new(ErrorKind::Multiple(errors))
+            Self::new(ErrorKind::Multiple({
+                let mut result = vec![first_element];
+                result.extend(errors.collect::<Vec<_>>());
+                result
+            }))
         }
     }
 }
@@ -168,11 +184,6 @@ impl Error {
         self
     }
 
-    pub fn syn(value: syn::Error) -> Self {
-        let span = value.span();
-        Self::new(ErrorKind::SynError(value)).with_span(&span)
-    }
-
     pub fn into_token_stream(self) -> TokenStream {
         self.flatten()
             .into_iter()
@@ -184,7 +195,7 @@ impl Error {
 
     fn into_syn_error(self) -> syn::Error {
         if let ErrorKind::Multiple(errors) = self.kind {
-            syn::Error::multiple(errors.into_iter().map(|e| syn::Error::new(e.span(), e)))
+            syn::Error::multiple(errors.into_iter().map(Self::into_syn_error))
         } else {
             syn::Error::new(self.span(), self)
         }
