@@ -1,35 +1,35 @@
-error: more than one `{}`
- --> $DIR/rename_verify_format.rs:5:33
-  |
-5 |     #[shorthand(rename(format = "abc_{}_{}"))]
-  |                                 ^^^^^^^^^^^
-
 error: missing `{}`
  --> $DIR/rename_verify_format.rs:7:33
   |
 7 |     #[shorthand(rename(format = "def"))]
   |                                 ^^^^^
 
-error: more than one `{}`
- --> $DIR/rename_verify_format.rs:9:30
-  |
-9 |     #[shorthand(rename(set = "ghi_{}_{}"))]
-  |                              ^^^^^^^^^^^
-
-error: missing `{}`
-  --> $DIR/rename_verify_format.rs:11:30
+error: invalid character in format string `#` at position 1
+  --> $DIR/rename_verify_format.rs:17:30
    |
-11 |     #[shorthand(rename(set = "jkl"))]
-   |                              ^^^^^
+17 |     #[shorthand(rename(get = "#pqr_{}", set = "{}#_", try_set = "abc@", get_mut = "trä_pöe"))]
+   |                              ^^^^^^^^^
 
-error: more than one `{}`
-  --> $DIR/rename_verify_format.rs:13:30
+error: invalid character in format string `#` at position 3
+  --> $DIR/rename_verify_format.rs:17:47
    |
-13 |     #[shorthand(rename(get = "mno_{}_{}"))]
-   |                              ^^^^^^^^^^^
+17 |     #[shorthand(rename(get = "#pqr_{}", set = "{}#_", try_set = "abc@", get_mut = "trä_pöe"))]
+   |                                               ^^^^^^
 
-error: missing `{}`
-  --> $DIR/rename_verify_format.rs:15:30
+error: invalid character in format string `@` at position 4
+  --> $DIR/rename_verify_format.rs:17:65
    |
-15 |     #[shorthand(rename(get = "pqr"))]
-   |                              ^^^^^
+17 |     #[shorthand(rename(get = "#pqr_{}", set = "{}#_", try_set = "abc@", get_mut = "trä_pöe"))]
+   |                                                                 ^^^^^^
+
+error: invalid character in format string `ä` at position 3
+  --> $DIR/rename_verify_format.rs:17:83
+   |
+17 |     #[shorthand(rename(get = "#pqr_{}", set = "{}#_", try_set = "abc@", get_mut = "trä_pöe"))]
+   |                                                                                   ^^^^^^^^^
+
+error: invalid character in format string `ö` at position 6
+  --> $DIR/rename_verify_format.rs:17:83
+   |
+17 |     #[shorthand(rename(get = "#pqr_{}", set = "{}#_", try_set = "abc@", get_mut = "trä_pöe"))]
+   |                                                                                   ^^^^^^^^^

@@ -7,7 +7,7 @@ use core::ops::{Deref, DerefMut};
 
 /// Attach a [`Span`] to an arbitrary type.
 #[derive(Debug, Clone, Copy, Default)]
-pub(crate) struct Spanned<T> {
+pub struct Spanned<T> {
     inner: T,
     span: Option<Span>,
 }

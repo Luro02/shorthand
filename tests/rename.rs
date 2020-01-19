@@ -15,6 +15,24 @@ struct Command {
     forth: usize,
     #[shorthand(rename(get_mut = "get_{}_mut"), enable(get_mut))]
     fifth: usize,
+    #[shorthand(
+        rename(
+            get = "hello",
+            set = "setto",
+            try_set = "trysetto",
+            get_mut = "getmutte"
+        ),
+        enable(try_into, get_mut)
+    )]
+    sixth: usize,
+}
+
+#[test]
+fn test_no_insert() {
+    let _: usize = Command::default().hello();
+    let _: &mut Command = Command::default().setto(1_usize);
+    let _: Result<&mut Command, core::num::TryFromIntError> = Command::default().trysetto(0_u32);
+    let _: &mut usize = Command::default().getmutte();
 }
 
 #[test]

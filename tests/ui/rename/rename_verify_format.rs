@@ -14,6 +14,10 @@ struct Command {
     fifth: usize,
     #[shorthand(rename(get = "pqr"))]
     sixth: usize,
+    #[shorthand(rename(get = "#pqr_{}", set = "{}#_", try_set = "abc@", get_mut = "trä_pöe"))]
+    seventh: usize,
+    #[shorthand(rename(get = "async"))]
+    eigth: usize,
 }
 
 fn main() {}

@@ -89,19 +89,6 @@ struct Generator<'a> {
 impl<'a> Generator<'a> {
     pub const fn from_options(options: &'a Options) -> Self { Self { options } }
 
-    fn parse_template<T: AsRef<str>>(template: T, argument: &Ident) -> Result<Ident, Error> {
-        let mut parts = template.as_ref().splitn(2, "{}");
-
-        let prefix = parts.next().unwrap_or("");
-        let suffix = parts
-            .next()
-            // this will return `None`, if the template doesn't contain `{}`, which should
-            // never happen, because this is checked while parsing the format.
-            .ok_or_else(|| Error::custom("missing `{}` in template."))?;
-
-        Ok(format_ident!("{}{}{}", prefix, argument, suffix))
-    }
-
     pub fn get(
         options: &Options,
         field_name: &Ident,
@@ -113,7 +100,7 @@ impl<'a> Generator<'a> {
         // -> without template -> `field`
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(&options.rename.get_format, field_name).unwrap()
+                options.rename.format_get(field_name)?
             } else {
                 field_name.clone()
             }
@@ -205,7 +192,7 @@ impl<'a> Generator<'a> {
         // -> without template -> `set_field`
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(&options.rename.set_format, field_name).unwrap()
+                options.rename.format_set(field_name)?
             } else {
                 format_ident!("set_{}", field_name)
             }
@@ -317,7 +304,7 @@ impl<'a> Generator<'a> {
     ) -> Result<TokenStream, Error> {
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(&options.rename.try_set_format, field_name).unwrap()
+                options.rename.format_try_set(field_name)?
             } else {
                 format_ident!("try_{}", field_name)
             }
@@ -386,7 +373,7 @@ impl<'a> Generator<'a> {
     ) -> Result<TokenStream, Error> {
         let function_name = {
             if options.attributes.rename {
-                Self::parse_template(&options.rename.get_mut_format, field_name).unwrap()
+                options.rename.format_get_mut(field_name)?
             } else {
                 format_ident!("{}_mut", field_name)
             }
