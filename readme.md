@@ -1,11 +1,11 @@
 shorthand
 ===
-[![Crates.io: hex](https://img.shields.io/crates/v/shorthand.svg)](https://crates.io/crates/shorthand)
-[![Documentation](https://docs.rs/shorthand/badge.svg)](https://docs.rs/shorthand)
+[![Crates.io: shorthand](https://img.shields.io/crates/v/shorthand.svg)](https://crates.io/crates/shorthand/)
+[![Documentation](https://docs.rs/shorthand/badge.svg)](https://docs.rs/shorthand/)
 [![Build Status](https://travis-ci.org/Luro02/shorthand.svg?branch=master)](https://travis-ci.org/Luro02/shorthand)
 
-[`shorthand`](https://dictionary.cambridge.org/de/worterbuch/englisch/shorthand) is defined as
-`a system of fast writing`
+`shorthand` is defined as
+[`a system of fast writing`](https://dictionary.cambridge.org/de/worterbuch/englisch/shorthand)
 and that is exactly what this library is for; to remove the annoying
 boilerplate code, that comes with writing your own library.
 
@@ -83,7 +83,7 @@ struct Example {
 }
 ```
 
-You can find the [documentation here](https://docs.rs/shorthand).
+You can find the [documentation here](https://docs.rs/shorthand/).
 
 ## Feature Requests and Bug Reports
 
