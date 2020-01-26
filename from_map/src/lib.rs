@@ -5,9 +5,10 @@
 //! There was sadly no crate available, so I had to make my own :(
 //!
 //! I made some improvements to the code and ported it to a newer version of
-//! `syn`. For example the `FromHashMap` trait doesn't need a type parameter
-//! and the [`HashMap`] should contain static str (field names should be known
+//! `syn`. For example the [`FromMap`] trait doesn't need a type parameter
+//! and the [`HashMap`] should contain a static str (field names should be known
 //! at compile time).
+pub use hashmap_derive::FromMap;
 use std::collections::HashMap;
 
 pub trait FromMap: Default {
@@ -24,8 +25,6 @@ pub trait FromMap: Default {
 
     fn as_map(&self) -> HashMap<&'static str, Self::Value> { HashMap::new() }
 }
-
-pub use hashmap_derive::FromMap;
 
 #[cfg(test)]
 mod tests {
