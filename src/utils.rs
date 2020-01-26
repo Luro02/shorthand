@@ -59,7 +59,7 @@ impl<T> Spanned<T> {
 
     pub const fn inner(&self) -> &T { &self.inner }
 
-    pub fn inner_mut(&mut self) -> &mut T { &mut self.inner }
+    //pub fn inner_mut(&mut self) -> &mut T { &mut self.inner }
 
     pub fn map<U, F: FnOnce(T) -> U>(self, f: F) -> Spanned<U> {
         Spanned {
