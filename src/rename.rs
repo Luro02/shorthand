@@ -212,14 +212,7 @@ impl Parse for Rename {
                         NestedMeta::Lit(lit) => {
                             let format = {
                                 match Format::from_lit(&lit) {
-                                    Ok(value) => {
-                                        if let Err(e) = value.verify_strict() {
-                                            errors.push(e);
-                                            continue;
-                                        }
-
-                                        value
-                                    }
+                                    Ok(value) => value,
                                     Err(e) => {
                                         errors.push(e);
                                         continue;

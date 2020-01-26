@@ -542,11 +542,18 @@ impl<'a> Generator<'a> {
         }
 
         if options.attributes.collection_magic {
-            let function = Self::collection_magic(&options, field_name, &field.ty)?;
-            result = quote! {
-                #result
-                #function
-            };
+            if field.ty.is_ident("Vec")
+                || field.ty.is_ident("BTreeMap")
+                || field.ty.is_ident("BTreeSet")
+                || field.ty.is_ident("HashMap")
+                || field.ty.is_ident("HashSet")
+            {
+                let function = Self::collection_magic(&options, field_name, &field.ty)?;
+                result = quote! {
+                    #result
+                    #function
+                };
+            }
         }
 
         Ok(result)

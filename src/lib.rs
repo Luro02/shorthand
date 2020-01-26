@@ -84,34 +84,10 @@
 //!
 //! The derive macro can be heavily customized with the `#[shorthand]`
 //! attribute. It has the following main attributes:
-//! * [`visibility`](#visibility)
-//! * [`rename`](#rename)
 //! * [`enable`](#enable)
 //! * [`disable`](#disable)
-//!
-//! ## `disable`
-//!
-//! This attribute allows you to disable certain attributes. For example by
-//! default the attribute [`primitive_copy`](#primitive_copy) is enabled
-//!
-//! ```
-//! use shorthand::ShortHand;
-//!
-//! #[derive(ShortHand, Default)]
-//! struct Example {
-//!     #[shorthand(disable(primitive_copy))]
-//!     field: usize,
-//!     other: usize,
-//! }
-//!
-//! let example = Example::default();
-//!
-//! assert_eq!(example.field(), &0); // returns a reference, instead of copying the value
-//! assert_eq!(example.other(), 0);
-//! ```
-//!
-//! You can find a list with all attributes, that can be disabled
-//! [here](#attributes).
+//! * [`visibility`](#visibility)
+//! * [`rename`](#rename)
 //!
 //! ## `enable`
 //!
@@ -138,8 +114,31 @@
 //! ```
 //!
 //! You can find a list with all attributes, that can be enabled
-//! [here](#attributes). Attributes, that are [enabled by
-//! default](#enabled-by-default).
+//! [here](#attributes).
+//!
+//! ## `disable`
+//!
+//! This attribute allows you to disable certain attributes. For example by
+//! default the attribute [`primitive_copy`](#primitive_copy) is enabled
+//!
+//! ```
+//! use shorthand::ShortHand;
+//!
+//! #[derive(ShortHand, Default)]
+//! struct Example {
+//!     #[shorthand(disable(primitive_copy))]
+//!     field: usize,
+//!     other: usize,
+//! }
+//!
+//! let example = Example::default();
+//!
+//! assert_eq!(example.field(), &0); // returns a reference, instead of copying the value
+//! assert_eq!(example.other(), 0);
+//! ```
+//!
+//! You can find a list with all attributes, that can be disabled
+//! [here](#attributes).
 //!
 //! ## `visibility`
 //!
@@ -234,9 +233,21 @@
 //! assert_eq!(example.prefix_data_suffix(), &"Hello".to_string());
 //! ```
 //!
-//! ## Attributes
+//! It is also possible to rename single fields
 //!
-//! There are multiple attributes, that can be [`enable`]d or [`disable`]d:
+//! ```
+//! use shorthand::ShortHand;
+//!
+//! #[derive(ShortHand, Default)]
+//! struct Example {
+//!     #[shorthand(rename("is_default"))]
+//!     default: bool,
+//! }
+//!
+//! assert_eq!(Example::default().is_default(), false);
+//! ```
+//!
+//! ## List of Attributes
 //! - [`option_as_ref`](derive.ShortHand.html#option_as_ref)
 //! - [`const_fn`](derive.ShortHand.html#const_fn)
 //! - [`primitive_copy`](derive.ShortHand.html#primitive_copy)
@@ -245,12 +256,17 @@
 //! - [`copy`](derive.ShortHand.html#copy)
 //! - [`get`](derive.ShortHand.html#get)
 //! - [`set`](derive.ShortHand.html#set)
+//! - [`into`](derive.ShortHand.html#into)
+//! - [`try_into`](derive.ShortHand.html#try_into)
+//! - [`get_mut`](derive.ShortHand.html#get_mut)
 //! - [`ignore_phantomdata`](derive.ShortHand.html#ignore_phantomdata)
 //! - [`skip`](derive.ShortHand.html#skip)
 //! - [`rename`](derive.ShortHand.html#rename)
-//! - [`into`](derive.ShortHand.html#into)
-//! - [`forward_attributes`](derive.ShortHand.html#forward_attributes)
-//! - [`forward_everything`](derive.ShortHand.html#forward_everything)
+//! - [`forward`](derive.ShortHand.html#forward)
+//! - [`ignore_underscore`](derive.ShortHand.html#ignore_underscore)
+//! - [`collection_magic`](derive.ShortHand.html#collection_magic)
+//! - [`strip_option`](derive.ShortHand.html#strip_option)
+//! - [`clone`](derive.ShortHand.html#clone)
 //!
 //! ### Enabled by default
 //!
@@ -264,8 +280,6 @@
 //! - [`forward_attributes`](#forward_attributes)
 //!
 //! [`enable`]: #enable
-//! [`disable`]: #disable
-//!
 //!
 //! # Feature Requests and Bug Reports
 //!
@@ -360,8 +374,7 @@ use syn::{parse_macro_input, DeriveInput};
 /// [here](https://doc.rust-lang.org/unstable-book/language-features/const-fn.html)
 /// or in the [RFC](https://github.com/rust-lang/rfcs/blob/master/text/0911-const-fn.md).
 ///
-/// By enabling this feature the derived functions will have the `const`
-/// attribute added.
+/// By enabling this feature the derived functions will be `const`.
 ///
 /// Please note, that not everything is currently supported and therefore some
 /// attributes will ignore this attribute and not add `const` to the function.
@@ -591,11 +604,11 @@ use syn::{parse_macro_input, DeriveInput};
 ///
 /// This attribute is not enabled by default.
 ///
-/// ## `forward_attributes`
+/// ## `forward`
 ///
-/// The `forward_attributes` attribute, allows you to control how attributes are
-/// forwarded. By default this is enabled and the [`proc_macro`] will forward
-/// the following attributes of the field to the function:
+/// The `forward` attribute, allows you to control how attributes are
+/// forwarded. By default the [`proc_macro`] will forward
+/// the following attributes of the field to the generated function:
 ///
 /// - [`doc`](https://doc.rust-lang.org/rustdoc/the-doc-attribute.html)
 /// - [`cfg`](https://doc.rust-lang.org/reference/conditional-compilation.html#the-cfg-attribute)
@@ -618,16 +631,13 @@ use syn::{parse_macro_input, DeriveInput};
 /// [`cold`]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-cold-attribute
 /// [`target_feature`]: https://doc.rust-lang.org/reference/attributes/codegen.html#the-target_feature-attribute
 ///
-/// If you want to forward everything, you can use
-/// [`forward_everything`](#forward_everything).
-///
 /// ```
 /// use shorthand::ShortHand;
 ///
 /// #[derive(ShortHand)]
-/// #[shorthand(disable(forward_attributes))]
+/// #[shorthand(disable(forward))]
 /// struct Example {
-///     #[shorthand(enable(forward_attributes))]
+///     #[shorthand(enable(forward(must_use)))]
 ///     #[must_use]
 ///     hello: &'static str,
 /// }
@@ -640,17 +650,18 @@ use syn::{parse_macro_input, DeriveInput};
 /// fn hello() -> &'static str { "hello" }
 /// ```
 ///
-/// This attribute can be applied multiple times on the same field, which allows
-/// for controlled forwarding
+/// This attribute can be applied multiple times on the same field, which would
+/// allow controlled forwarding. Please note, that this feature does not work,
+/// until this issue is fixed <https://github.com/rust-lang/rust/issues/67839>.
 ///
 /// ```
 /// use shorthand::ShortHand;
 ///
 /// #[derive(ShortHand)]
 /// struct Example {
-///     #[shorthand(enable(forward_attributes))]
+///     #[shorthand(enable(forward))]
 ///     #[must_use]
-///     #[shorthand(disable(forward_attributes))]
+///     #[shorthand(disable(forward))]
 ///     #[allow(dead_code)]
 ///     hello: &'static str,
 /// }
@@ -673,9 +684,9 @@ use syn::{parse_macro_input, DeriveInput};
 ///     /// - The String can only exist of uppercase characters
 ///     /// - Numbers are allowed
 ///     /// - The String has a maximum size of 5.
-///     #[shorthand(disable(forward_attributes))]
+///     #[shorthand(disable(forward))]
 ///     /// This part will not be forwarded.
-///     #[shorthand(enable(forward_attributes))]
+///     #[shorthand(enable(forward))]
 ///     ///
 ///     /// # Example
 ///     ///
@@ -728,13 +739,101 @@ use syn::{parse_macro_input, DeriveInput};
 /// as you can see the line `/// This part will not be forwarded.` did not get
 /// forwarded.
 ///
-/// ## `forward_everything`
+/// ## `ignore_underscore`
 ///
-/// The `forward_everything` attribute will like the name implies instruct the
-/// [`proc_macro`] to forward all attributes, that a field has.
-/// This attribute works like [`forward_attributes`](#forward_attributes).
+/// This attribute instructs the [`proc_macro`] to ignore fields prefixed
+/// with an `_`.
 ///
 /// This attribute is not enabled by default.
+///
+/// ## `collection_magic`
+///
+/// This attribute instructs the [`proc_macro`] to derive additonal functions
+/// for fields, that have a collection.
+///
+/// The following collections are supported:
+/// - [`Vec`](std::vec::Vec)
+/// - [`BTreeMap`](std::collections::BTreeMap)
+/// - [`BTreeSet`](std::collections::BTreeSet)
+/// - [`HashMap`](std::collections::HashMap)
+/// - [`HashSet`](std::collections::HashSet)
+///
+/// It will derive a `push_field` function for [`Vec`]
+/// and for all the other collection types an `insert_field` function.
+///
+/// ```
+/// use shorthand::ShortHand;
+/// use std::collections::BTreeMap;
+///
+/// #[derive(ShortHand, Default)]
+/// struct Example {
+///     #[shorthand(enable(collection_magic))]
+///     value: Vec<usize>,
+///     #[shorthand(enable(collection_magic))]
+///     other: BTreeMap<usize, usize>,
+/// }
+///
+/// let mut example = Example::default();
+///
+/// example.push_value(1);
+/// example.push_value(2);
+/// example.push_value(3);
+///
+/// assert_eq!(example.value(), &vec![1, 2, 3]);
+///
+/// example.insert_other(1, 1);
+/// example.insert_other(2, 2);
+/// example.insert_other(3, 3);
+///
+/// assert_eq!(example.other(), &{
+///     let mut result = BTreeMap::new();
+///     result.insert(1, 1);
+///     result.insert(2, 2);
+///     result.insert(3, 3);
+///     result
+/// });
+/// ```
+///
+/// ## `strip_option`
+///
+/// This will change the input type for setter of optional fields from
+/// `Option<T>` to `T`.
+///
+/// ```
+/// use shorthand::ShortHand;
+///
+/// #[derive(ShortHand, Default)]
+/// struct Example {
+///     value: Option<usize>,
+///     #[shorthand(enable(strip_option))]
+///     other: Option<usize>,
+/// }
+///
+/// Example::default().set_value(Some(0));
+/// Example::default().set_other(0);
+/// ```
+///
+/// This attribute is diabled by default.
+///
+/// ## `clone`
+///
+/// The getter will [`clone`](Clone::clone) the field instead of returning a
+/// reference.
+///
+/// ```
+/// use shorthand::ShortHand;
+/// use std::rc::Rc;
+///
+/// #[derive(ShortHand, Default)]
+/// struct Example {
+///     #[shorthand(enable(clone))]
+///     value: Rc<usize>,
+/// }
+///
+/// assert_eq!(Example::default().value(), Rc::new(0));
+/// ```
+///
+/// This attribute is diabled by default.
 #[proc_macro_derive(ShortHand, attributes(shorthand))]
 pub fn shorthand(input: TokenStream) -> TokenStream {
     // Parse the input tokens into a syntax tree

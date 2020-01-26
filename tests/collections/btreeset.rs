@@ -5,6 +5,7 @@ use std::collections::BTreeSet;
 #[shorthand(enable(collection_magic))]
 struct Example {
     collection: BTreeSet<&'static str>,
+    irrelevant_field: usize,
 }
 
 fn main() { let _: &mut Example = Example::default().insert_collection("value"); }

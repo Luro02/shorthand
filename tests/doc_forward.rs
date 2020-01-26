@@ -6,9 +6,9 @@ struct Example {
     /// - the String can only exist of uppercase characters
     /// - Numbers are allowed
     /// - The String has a maximum size of 5.
-    #[shorthand(disable(forward_attributes))]
+    #[shorthand(disable(forward(doc)))]
     /// This part will not be forwarded.
-    #[shorthand(enable(forward_attributes))]
+    #[shorthand(enable(forward(doc)))]
     ///
     /// # Example
     ///

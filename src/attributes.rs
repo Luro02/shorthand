@@ -23,7 +23,7 @@ What should trigger redundant error:
 */
 
 impl AttributesBuilder {
-    const FIELDS: [&'static str; 20] = [
+    const FIELDS: [&'static str; 19] = [
         "option_as_ref",
         "const_fn",
         "primitive_copy",
@@ -32,15 +32,14 @@ impl AttributesBuilder {
         "copy",
         "get",
         "set",
+        "into",
+        "try_into",
+        "get_mut",
         "ignore_phantomdata",
         "skip",
         "rename",
-        "into",
-        "forward_attributes",
-        "forward_everything",
+        "forward",
         "ignore_underscore",
-        "try_into",
-        "get_mut",
         "collection_magic",
         "strip_option",
         "clone",
@@ -188,8 +187,6 @@ pub(crate) struct Attributes {
     // `true` means that the field can be renamed
     pub rename: bool,
     pub into: bool,
-    pub forward_attributes: bool,
-    pub forward_everything: bool,
     pub ignore_underscore: bool,
     pub try_into: bool,
     pub get_mut: bool,
@@ -225,8 +222,6 @@ impl Default for Attributes {
             skip: false,
             rename: true,
             into: false,
-            forward_attributes: true,
-            forward_everything: false,
             ignore_underscore: false,
             try_into: false,
             get_mut: false,
