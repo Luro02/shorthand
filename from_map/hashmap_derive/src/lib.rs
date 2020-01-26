@@ -1,3 +1,7 @@
+//! This crate only exists, because it is not possible to export a trait and a
+//! `proc_macro` in the same crate.
+//!
+//! You should instead use the [`from_map`](https://crates.io/crates/from_map) crate.
 #![warn(clippy::pedantic, clippy::nursery)]
 extern crate proc_macro;
 

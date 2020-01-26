@@ -3,8 +3,11 @@ name = "from_map"
 version = "0.1.0"
 authors = ["Luro02 <24826124+Luro02@users.noreply.github.com>"]
 edition = "2018"
+description = "A crate that exposes the `FromMap` trait"
+license = "Unlicense OR MIT OR Apache-2.0"
+repository = "https://github.com/Luro02/shorthand"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-hashmap_derive = { path = "hashmap_derive" }
+hashmap_derive = { path = "hashmap_derive", version = "0.1.0" }

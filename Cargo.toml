@@ -13,9 +13,6 @@ categories = ["Procedural macro helpers"]
 [lib]
 proc-macro = true
 
-[workspace]
-members = ["from_map"]
-
 [dependencies]
 proc-macro2 = "1.0"
 syn = { version = "1.0", features = [ "extra-traits" ] }
