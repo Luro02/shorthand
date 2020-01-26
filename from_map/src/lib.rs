@@ -5,7 +5,7 @@
 //! There was sadly no crate available, so I had to make my own :(
 //!
 //! I made some improvements to the code and ported it to a newer version of
-//! [`syn`]. For example the [`FromHashMap`] trait doesn't need a type parameter
+//! `syn`. For example the `FromHashMap` trait doesn't need a type parameter
 //! and the [`HashMap`] should contain static str (field names should be known
 //! at compile time).
 use std::collections::HashMap;
