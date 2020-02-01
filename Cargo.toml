@@ -1,6 +1,6 @@
 [package]
 name = "shorthand"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Luro02 <24826124+Luro02@users.noreply.github.com>"]
 edition = "2018"
 description = "A proc_macro to derive getter and setter for structs"
