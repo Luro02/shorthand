@@ -20,6 +20,7 @@ pub(crate) struct Options {
     pub visibility: Visibility,
     pub attributes: Attributes,
     pub rename: Rename,
+    is_initial: bool,
 }
 
 impl Options {
@@ -127,7 +128,7 @@ impl Options {
                     continue;
                 }
             } else {
-                if result.forward.is(attr.path.to_string().as_str()) {
+                if result.forward.is(attr.path.to_string().as_str()) && !result.is_initial {
                     result.attrs.push(attr.clone());
                 }
                 continue;
@@ -136,6 +137,10 @@ impl Options {
 
         if !errors.is_empty() {
             return Err(Error::multiple(errors));
+        }
+
+        if result.is_initial {
+            result.is_initial = false;
         }
 
         Ok(result)
@@ -165,6 +170,7 @@ impl Options {
                 .unwrap_or_else(|| input.vis.clone()),
             attributes: Attributes::default(),
             rename: Rename::default(),
+            is_initial: true,
         };
 
         Ok(Self::parse_attributes(result, &input.attrs)?)

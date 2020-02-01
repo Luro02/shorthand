@@ -1,5 +1,6 @@
 use shorthand::ShortHand;
 
+/// struct level attributes/documentation should not be forwarded
 #[derive(ShortHand, Default)]
 struct Example {
     /// Data has some special restrictions.
