@@ -76,6 +76,7 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
 
     Ok(quote! {
         #[allow(dead_code)]
+        #[allow(clippy::all)]
         impl #impl_generics #name #ty_generics #where_clause {
             #(#functions)*
         }
