@@ -69,7 +69,7 @@ impl Example {
 Simply add this library under `[dependencies]` to your `Cargo.toml`
 ```toml
 [dependencies]
-shorthand = "0.1.0"
+shorthand = "0.1"
 ```
 
 You can then derive `ShortHand` for any struct
