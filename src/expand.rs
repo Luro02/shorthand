@@ -1,7 +1,11 @@
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote, quote_spanned};
+use syn::punctuated::Punctuated;
 use syn::spanned::Spanned as _;
-use syn::{Attribute, Data, DeriveInput, Field, Fields, Ident, Type};
+use syn::{
+    Attribute, Data, DeriveInput, Field, Fields, Generics, Ident, PredicateType, TraitBound,
+    TraitBoundModifier, Type, TypeParamBound, WherePredicate,
+};
 
 use crate::error::Error;
 use crate::options::Options;
@@ -83,6 +87,83 @@ pub fn derive(input: &DeriveInput) -> crate::Result<TokenStream> {
     })
 }
 
+fn generate_assertion(
+    name: &TokenStream,
+    field_type: &Type,
+    generics: &Generics,
+    bound: &TokenStream,
+) -> TokenStream {
+    let where_clause = {
+        if let Some(where_clause) = &generics.where_clause {
+            let mut result = (*where_clause).clone();
+
+            result
+                .predicates
+                .push_value(WherePredicate::Type(PredicateType {
+                    lifetimes: None,
+                    bounded_ty: field_type.clone(),
+                    colon_token: syn::parse2(quote!(:)).unwrap(),
+                    bounds: {
+                        let mut bounds = Punctuated::new();
+
+                        bounds.push_value(TypeParamBound::Trait(TraitBound {
+                            paren_token: None,
+                            modifier: TraitBoundModifier::None,
+                            lifetimes: None,
+                            path: syn::parse2(quote!(#bound)).unwrap(),
+                        }));
+
+                        bounds
+                    },
+                }));
+
+            quote!(#result)
+        } else {
+            quote!( where #field_type: #bound )
+        }
+    };
+
+    let fields = {
+        let mut result = vec![];
+        let mut field_number: usize = 0;
+
+        for lifetime_def in generics.lifetimes() {
+            let lifetime = &lifetime_def.lifetime;
+            let name = format_ident!("__field_{}", field_number);
+
+            result.push(quote! {
+                #name: ::std::marker::PhantomData<& #lifetime ()>
+            });
+            field_number += 1;
+        }
+
+        for param in generics.type_params() {
+            let ident = &param.ident;
+            let name = format_ident!("__field_{}", field_number);
+
+            result.push(quote! {
+                #name: ::std::marker::PhantomData<#ident>
+            });
+            field_number += 1;
+        }
+
+        result
+    };
+
+    let (_, ty_generics, _) = generics.split_for_impl();
+
+    // this will expand to for example
+    // struct _AssertCopy where usize: Copy;
+    //
+    // it acts as a check for wether a type implements Copy or not.
+    quote_spanned! {
+        field_type.span() =>
+        struct #name #ty_generics #where_clause {
+            #(#fields),*
+        }
+    }
+}
+
 struct Generator<'a> {
     options: &'a Options,
 }
@@ -137,10 +218,13 @@ impl<'a> Generator<'a> {
                     quote![self.#field_name.as_ref()],
                 )
             } else if options.attributes.clone {
-                assertions.push(quote_spanned! {
-                    field_type.span() =>
-                    struct _AssertClone where #field_type: ::std::clone::Clone;
-                });
+                assertions.push(generate_assertion(
+                    &quote!(_AssertClone),
+                    field_type,
+                    &options.generics,
+                    &quote!(::std::clone::Clone),
+                ));
+
                 (quote![#field_type], quote! { self.#field_name.clone() })
             } else {
                 (quote![&#field_type], quote![&self.#field_name])
@@ -155,14 +239,12 @@ impl<'a> Generator<'a> {
                 // the assertion does not work with lifetimes :(
                 && !field_type.is_reference())
         {
-            // this will expand to for example
-            // struct _AssertCopy where usize: Copy;
-            //
-            // it acts as a check for wether a type implements Copy or not.
-            assertions.push(quote_spanned! {
-                field_type.span() =>
-                struct _AssertCopy where #field_type: ::std::marker::Copy;
-            });
+            assertions.push(generate_assertion(
+                &quote!(_AssertCopy),
+                field_type,
+                &options.generics,
+                &quote!(::std::marker::Copy),
+            ));
         }
 
         let const_fn = {

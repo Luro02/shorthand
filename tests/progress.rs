@@ -16,6 +16,7 @@ fn tests() {
     t.pass("tests/primitive_copy/paren.rs");
     t.pass("tests/primitive_copy/reference.rs");
     t.pass("tests/primitive_copy/tuple.rs");
+    t.pass("tests/primitive_copy/option_as_ref.rs");
 
     // forward
     t.compile_fail("tests/forward/parse.rs");

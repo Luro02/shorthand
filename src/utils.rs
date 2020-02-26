@@ -1,7 +1,7 @@
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::parse::Parser;
-use syn::{Attribute, Ident, Meta, Path, PathArguments, Type};
+use syn::{Attribute, GenericArgument, Ident, Meta, Path, PathArguments, Type};
 
 use core::ops::{Deref, DerefMut};
 
@@ -226,6 +226,23 @@ impl TypeExt for Type {
             match last.ident.to_string().as_ref() {
                 "bool" | "char" | "f32" | "f64" | "i8" | "i16" | "i32" | "i64" | "i128"
                 | "isize" | "u8" | "u16" | "u32" | "u64" | "u128" | "usize" => return true,
+                "Option" => {
+                    if let PathArguments::AngleBracketed(bracketed) = &last.arguments {
+                        let mut result = true;
+
+                        for arg in bracketed.args.iter() {
+                            if let GenericArgument::Type(ty) = arg {
+                                result = ty.is_primitive_copy();
+                            } // all other kinds of GenericArgument are ignored for now...
+
+                            if !result {
+                                return result;
+                            }
+                        }
+
+                        return result;
+                    }
+                }
                 _ => return false,
             }
         }
