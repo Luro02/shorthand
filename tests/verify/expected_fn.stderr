@@ -1,0 +1,5 @@
+error: expected `fn`
+ --> $DIR/expected_fn.rs:4:20
+  |
+4 | #[shorthand(verify(ffn = "Self::verify_field"))]
+  |                    ^^^

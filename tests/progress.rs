@@ -4,6 +4,12 @@ use trybuild::TestCases;
 fn tests() {
     let t = TestCases::new();
 
+    // verify attribute
+    t.pass("tests/verify/simple_verify.rs");
+    t.compile_fail("tests/verify/unexpected_lit.rs");
+    t.compile_fail("tests/verify/expected_fn.rs");
+    t.compile_fail("tests/verify/unexpected_meta.rs");
+
     // collection tests
     t.pass("tests/collections/vec.rs");
     t.pass("tests/collections/btreemap.rs");

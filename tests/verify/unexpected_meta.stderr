@@ -1,0 +1,5 @@
+error: unexpected meta-item format `Path`, expected `NameValue`
+ --> $DIR/unexpected_meta.rs:4:20
+  |
+4 | #[shorthand(verify(fn))]
+  |                    ^^

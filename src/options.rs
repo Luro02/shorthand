@@ -6,6 +6,7 @@ use crate::error::Error;
 use crate::forward::Forward;
 use crate::rename::Rename;
 use crate::utils::{MetaExt, PathExt};
+use crate::verify::Verify;
 use crate::visibility::FieldVisibility;
 
 #[derive(Debug, Clone)]
@@ -20,11 +21,12 @@ pub(crate) struct Options {
     pub visibility: Visibility,
     pub attributes: Attributes,
     pub rename: Rename,
+    pub verify: Verify,
     is_initial: bool,
 }
 
 impl Options {
-    const FIELDS: [&'static str; 4] = ["enable", "disable", "visibility", "rename"];
+    const FIELDS: [&'static str; 5] = ["enable", "disable", "visibility", "rename", "verify"];
 
     fn parse_attributes<T>(mut result: Self, attrs: &T) -> Result<Self, Error>
     where
@@ -105,9 +107,19 @@ impl Options {
                                                 errors.push(Error::syn(err));
                                             }
                                         }
+                                    } else if field == &"verify" {
+                                        match syn::parse2(quote!(#attr)) {
+                                            Ok(attr) => {
+                                                result.verify = attr;
+                                            }
+                                            Err(err) => {
+                                                errors.push(Error::syn(err));
+                                            }
+                                        }
                                     } else {
                                         unreachable!(format!("unhandled field: {}", field));
                                     }
+
                                     unknown = false;
                                     break;
                                 }
@@ -170,6 +182,7 @@ impl Options {
                 .unwrap_or_else(|| input.vis.clone()),
             attributes: Attributes::default(),
             rename: Rename::default(),
+            verify: Verify::default(),
             is_initial: true,
         };
 

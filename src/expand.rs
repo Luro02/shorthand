@@ -286,80 +286,65 @@ impl<'a> Generator<'a> {
         let return_type = quote![&mut Self];
         let visibility = &options.visibility;
 
-        let body = {
-            if options.attributes.into {
-                let mut argument = quote! { value: VALUE };
+        let mut argument = quote! { value: #field_type };
+        let mut assignment = quote! { self.#field_name = value; };
 
-                let mut result = quote! {
-                    self.#field_name = value.into();
-                    self
-                };
+        if options.attributes.into {
+            argument = quote! { value: VALUE };
+            let mut bound = quote! { VALUE: ::std::convert::Into<#field_type> };
 
-                let mut bound = quote! { VALUE: ::std::convert::Into<#field_type> };
+            // default assignment for into
+            assignment = quote! {
+                self.#field_name = value.into();
+            };
 
-                if field_type.is_ident("Option") {
-                    if let Some(arg) = field_type
-                        .arguments()
-                        .into_iter()
-                        .find_map(|s| s.into_iter().last())
-                    {
-                        if options.attributes.strip_option {
-                            bound = quote! { VALUE: ::std::convert::Into<#arg> };
+            // For Option we might want to have
+            //
+            // fn set_field<T: Into<String>>(value: Option<T>);
+            //
+            // instead of
+            //
+            // fn set_field<T: Into<Option<String>>>(value: T);
+            //
+            if field_type.is_ident("Option") {
+                // tries to get the `T` from Option<T>
+                if let Some(arg) = field_type
+                    .arguments()
+                    .into_iter()
+                    .find_map(|s| s.into_iter().last())
+                {
+                    bound = quote! { VALUE: ::std::convert::Into<#arg> };
 
-                            result = quote! {
-                                self.#field_name = Some(value.into());
-                                self
-                            };
-                        } else {
-                            bound = quote! { VALUE: ::std::convert::Into<#arg> };
-                            argument = quote! { value: ::std::option::Option<VALUE> };
-                            result = quote! {
-                                self.#field_name = value.map(|v| v.into());
-                                self
-                            };
-                        }
+                    if options.attributes.strip_option {
+                        assignment = quote! {
+                            self.#field_name = Some(value.into());
+                        };
+                    } else {
+                        argument = quote! { value: ::std::option::Option<VALUE> };
+
+                        assignment = quote! {
+                            self.#field_name = value.map(|v| v.into());
+                        };
                     }
                 }
-
-                arguments.push(argument);
-                generics.push(bound);
-                result
-            } else {
-                let mut result = quote! {
-                    self.#field_name = value;
-                    self
-                };
-
-                let mut argument = quote! { value: #field_type };
-
-                if field_type.is_ident("Option") {
-                    if let Some(arg) = field_type
-                        .arguments()
-                        .into_iter()
-                        .find_map(|s| s.into_iter().last())
-                    {
-                        if options.attributes.strip_option {
-                            argument = quote! { value: #arg };
-
-                            result = quote! {
-                                self.#field_name = Some(value);
-                                self
-                            };
-                        } else {
-                            argument = quote! { value: Option<#arg> };
-
-                            result = quote! {
-                                self.#field_name = value.map(|v| v.into());
-                                self
-                            };
-                        }
-                    }
-                }
-
-                arguments.push(argument);
-                result
             }
-        };
+
+            generics.push(bound);
+        } else if field_type.is_ident("Option") && options.attributes.strip_option {
+            if let Some(arg) = field_type
+                .arguments()
+                .into_iter()
+                .find_map(|s| s.into_iter().last())
+            {
+                argument = quote! { value: #arg };
+
+                assignment = quote! {
+                    self.#field_name = Some(value);
+                };
+            }
+        }
+
+        arguments.push(argument);
 
         // Attributes like `#[allow(clippy::use_self)]`
         let mut attributes: Vec<Attribute> = options.attrs.clone();
@@ -372,10 +357,14 @@ impl<'a> Generator<'a> {
         // Blocked by:  - rust-lang/rust#57349
         //              - rust-lang/rfcs#2632
 
+        let verify = &options.verify;
+
         Ok(quote! {
             #(#attributes)*
             #visibility fn #function_name <#(#generics),*> ( #(#arguments),* ) -> #return_type {
-                #body
+                #assignment
+                #verify
+                self
             }
         })
     }
@@ -403,7 +392,6 @@ impl<'a> Generator<'a> {
 
         let mut body = quote! {
             self.#field_name = value.try_into()?;
-            Ok(self)
         };
 
         let mut bound = quote! {
@@ -419,13 +407,11 @@ impl<'a> Generator<'a> {
                 if options.attributes.strip_option {
                     body = quote! {
                         self.#field_name = Some(value.try_into()?);
-                        Ok(self)
                     };
                 } else {
                     argument = quote! { value: ::std::option::Option<VALUE> };
                     body = quote! {
                         self.#field_name = value.map(|v| v.try_into()).transpose()?;
-                        Ok(self)
                     };
                 }
 
@@ -434,6 +420,8 @@ impl<'a> Generator<'a> {
                 };
             }
         }
+
+        let verify = &options.verify;
 
         Ok(quote! {
             #(#attributes)*
@@ -445,6 +433,8 @@ impl<'a> Generator<'a> {
                 #bound
             {
                 #body
+                #verify
+                Ok(self)
             }
         })
     }
@@ -624,21 +614,23 @@ impl<'a> Generator<'a> {
             };
         }
 
-        if options.attributes.collection_magic {
-            if field.ty.is_ident("Vec")
-                || field.ty.is_ident("BTreeMap")
-                || field.ty.is_ident("BTreeSet")
-                || field.ty.is_ident("HashMap")
-                || field.ty.is_ident("HashSet")
-            {
-                let function = Self::collection_magic(&options, field_name, &field.ty)?;
-                result = quote! {
-                    #result
-                    #function
-                };
+        #[allow(clippy::collapsible_if)]
+        {
+            if options.attributes.collection_magic {
+                if field.ty.is_ident("Vec")
+                    || field.ty.is_ident("BTreeMap")
+                    || field.ty.is_ident("BTreeSet")
+                    || field.ty.is_ident("HashMap")
+                    || field.ty.is_ident("HashSet")
+                {
+                    let function = Self::collection_magic(&options, field_name, &field.ty)?;
+                    result = quote! {
+                        #result
+                        #function
+                    };
+                }
             }
         }
-
         Ok(result)
     }
 }

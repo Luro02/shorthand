@@ -88,6 +88,7 @@
 //! * [`disable`](#disable)
 //! * [`visibility`](#visibility)
 //! * [`rename`](#rename)
+//! * [`verify`](#verify)
 //!
 //! ## `enable`
 //!
@@ -247,6 +248,33 @@
 //! assert_eq!(Example::default().is_default(), false);
 //! ```
 //!
+//! ## `verify`
+//!
+//! This attribute allows you to verify wether or not a value passed to a setter
+//! is valid.
+//!
+//! ```should_panic
+//! use shorthand::ShortHand;
+//!
+//! #[derive(ShortHand)]
+//! #[shorthand(verify(fn = "Self::verify_field"))]
+//! struct Example {
+//!     field: bool,
+//! }
+//!
+//! impl Example {
+//!     fn verify_field(&self) {
+//!         if self.field {
+//!             panic!("field must be `false`");
+//!         }
+//!     }
+//! }
+//!
+//! let mut example = Example { field: false };
+//!
+//! example.set_field(true);
+//! ```
+//!
 //! ## List of Attributes
 //! - [`option_as_ref`](derive.ShortHand.html#option_as_ref)
 //! - [`const_fn`](derive.ShortHand.html#const_fn)
@@ -309,7 +337,7 @@
     missing_debug_implementations,
     //missing_docs
 )]
-#![allow(clippy::must_use_candidate, clippy::default_trait_access)]
+#![allow(clippy::default_trait_access)]
 extern crate proc_macro;
 
 mod attributes;
@@ -320,6 +348,7 @@ mod options;
 mod parser;
 mod rename;
 mod utils;
+mod verify;
 mod visibility;
 
 pub(crate) use error::Error;

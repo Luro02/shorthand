@@ -1,0 +1,5 @@
+error: unexpected literal type `byte string`
+ --> $DIR/unexpected_lit.rs:4:25
+  |
+4 | #[shorthand(verify(fn = b"Self::verify_field"))]
+  |                         ^^^^^^^^^^^^^^^^^^^^^
